@@ -14,25 +14,43 @@ interface Props {
 }
 
 const PLATFORMS: LmsProvider[] = ["LEARNING_SUITE", "CANVAS", "GRADESCOPE", "MAX"];
+const PLATFORM_SET = new Set<LmsProvider>(PLATFORMS);
+
+function createCourse(defaultPlatform: LmsProvider = "CANVAS"): CourseRow {
+  return {
+    id: `course-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+    name: "",
+    platform: defaultPlatform
+  };
+}
 
 export function OnboardingConnectionWizard({ onDone }: Props) {
   const [step, setStep] = useState(1);
-  const [courses, setCourses] = useState<CourseRow[]>([
-    { id: crypto.randomUUID(), name: "", platform: "CANVAS" }
-  ]);
+  const [courses, setCourses] = useState<CourseRow[]>([createCourse()]);
   const [canvasToken, setCanvasToken] = useState("");
   const [canvasBaseUrl, setCanvasBaseUrl] = useState("https://byu.instructure.com");
   const [learningSuiteFeeds, setLearningSuiteFeeds] = useState<Record<string, string>>({});
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const hasCanvasCourses = useMemo(
-    () => courses.some((course) => course.platform === "CANVAS" && course.name.trim()),
+  const safeCourses = useMemo(
+    () =>
+      courses
+        .filter((course): course is CourseRow => Boolean(course && typeof course.id === "string"))
+        .map((course) => ({
+          ...course,
+          platform: PLATFORM_SET.has(course.platform) ? course.platform : "CANVAS"
+        })),
     [courses]
   );
+
+  const hasCanvasCourses = useMemo(
+    () => safeCourses.some((course) => course.platform === "CANVAS" && course.name.trim()),
+    [safeCourses]
+  );
   const learningSuiteCourses = useMemo(
-    () => courses.filter((course) => course.platform === "LEARNING_SUITE" && course.name.trim()),
-    [courses]
+    () => safeCourses.filter((course) => course.platform === "LEARNING_SUITE" && course.name.trim()),
+    [safeCourses]
   );
 
   async function connectCanvasToken() {
@@ -109,7 +127,7 @@ export function OnboardingConnectionWizard({ onDone }: Props) {
             Add your current schedule first. For each course, pick which LMS it uses.
           </p>
           <div style={{ display: "grid", gap: "0.6rem" }}>
-            {courses.map((course) => (
+            {safeCourses.map((course) => (
               <div key={course.id} className="row">
                 <input
                   type="text"
@@ -124,12 +142,17 @@ export function OnboardingConnectionWizard({ onDone }: Props) {
                   }
                 />
                 <select
-                  value={course.platform}
+                  value={PLATFORM_SET.has(course.platform) ? course.platform : "CANVAS"}
                   onChange={(event) =>
                     setCourses((current) =>
                       current.map((row) =>
                         row.id === course.id
-                          ? { ...row, platform: event.currentTarget.value as LmsProvider }
+                          ? {
+                              ...row,
+                              platform: PLATFORM_SET.has(event.currentTarget.value as LmsProvider)
+                                ? (event.currentTarget.value as LmsProvider)
+                                : "CANVAS"
+                            }
                           : row
                       )
                     )
@@ -146,7 +169,7 @@ export function OnboardingConnectionWizard({ onDone }: Props) {
                   onClick={() =>
                     setCourses((current) => current.filter((row) => row.id !== course.id))
                   }
-                  disabled={courses.length <= 1}
+                  disabled={safeCourses.length <= 1}
                 >
                   Remove
                 </button>
@@ -157,10 +180,7 @@ export function OnboardingConnectionWizard({ onDone }: Props) {
             <button
               type="button"
               onClick={() =>
-                setCourses((current) => [
-                  ...current,
-                  { id: crypto.randomUUID(), name: "", platform: "CANVAS" }
-                ])
+                setCourses((current) => [...current, createCourse()])
               }
             >
               Add Course
