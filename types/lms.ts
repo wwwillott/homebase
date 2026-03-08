@@ -67,6 +67,7 @@ export interface ConnectorAuthPayload {
   userId: string;
   code?: string;
   token?: string;
+  baseUrl?: string;
   username?: string;
   password?: string;
 }

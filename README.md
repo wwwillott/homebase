@@ -72,6 +72,7 @@ Additional `GET /api/assignments` filters:
    - `AUTH_SECRET` (required)
    - BYU SSO vars (`BYU_OIDC_CLIENT_ID`, `BYU_OIDC_CLIENT_SECRET`, `BYU_OIDC_ISSUER`) if using BYU login
    - `NEXT_PUBLIC_BYU_SSO_ENABLED=true` to show BYU button on sign-in page
+   - `CANVAS_BASE_URL` (defaults to `https://byu.instructure.com`)
 6. Start app: `npm run dev`
 7. Start worker (optional): `npm run worker`
 
@@ -99,6 +100,7 @@ Additional `GET /api/assignments` filters:
    - BYU SSO sign-in
    - local account sign-up/sign-in
    - connect LMS providers from the settings sidebar and run `Sync now`.
+   - for Canvas, provide a Canvas API token and Canvas base URL.
 
 Notes:
 - BYU SSO requires a real BYU OIDC client registration.
@@ -107,5 +109,5 @@ Notes:
 
 ## Current Scope
 
-- LMS connectors currently use scaffold/mock sync payloads for development flow validation.
-- Production integrations still require provider-specific auth/API implementations in `lib/connectors/providers.ts`.
+- Canvas connector now supports live API sync using token + base URL.
+- Learning Suite, Gradescope, and Max connectors are currently scaffold/mock and still need provider-specific API integration.

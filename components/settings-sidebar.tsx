@@ -44,6 +44,7 @@ export function SettingsSidebar({
     GRADESCOPE: "",
     MAX: ""
   });
+  const [canvasBaseUrl, setCanvasBaseUrl] = useState("");
   const [status, setStatus] = useState<string>("");
 
   async function connectProvider(provider: LmsProvider) {
@@ -52,7 +53,8 @@ export function SettingsSidebar({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        token: tokens[provider] || `manual-${provider.toLowerCase()}`
+        token: tokens[provider] || `manual-${provider.toLowerCase()}`,
+        baseUrl: provider === "CANVAS" ? canvasBaseUrl || undefined : undefined
       })
     });
 
@@ -111,6 +113,14 @@ export function SettingsSidebar({
                 }
                 placeholder="Token / code / username"
               />
+              {provider.id === "CANVAS" ? (
+                <input
+                  type="text"
+                  value={canvasBaseUrl}
+                  onChange={(event) => setCanvasBaseUrl(event.currentTarget.value)}
+                  placeholder="Canvas base URL (e.g. https://byu.instructure.com)"
+                />
+              ) : null}
               <button type="button" onClick={() => connectProvider(provider.id)}>
                 Connect
               </button>

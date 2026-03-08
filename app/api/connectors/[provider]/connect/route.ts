@@ -8,6 +8,7 @@ import { ConnectorAuthPayload, LmsProvider } from "@/types/lms";
 const schema = z.object({
   code: z.string().optional(),
   token: z.string().optional(),
+  baseUrl: z.string().url().optional(),
   username: z.string().optional(),
   password: z.string().optional()
 });
@@ -31,16 +32,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     userId: session.user.id,
     code: parsed.data.code,
     token: parsed.data.token,
+    baseUrl: parsed.data.baseUrl,
     username: parsed.data.username,
     password: parsed.data.password
   };
-  const authorization = await connector.authorize(authPayload);
-  await connectProvider(
-    session.user.id,
-    provider,
-    authorization.encryptedToken,
-    authorization.externalUserId
-  );
+  try {
+    const authorization = await connector.authorize(authPayload);
+    await connectProvider(
+      session.user.id,
+      provider,
+      authorization.encryptedToken,
+      authorization.externalUserId
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to connect provider";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
 
   return NextResponse.json({ ok: true, provider });
 }

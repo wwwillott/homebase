@@ -31,6 +31,7 @@ Set these for Production:
 - `BYU_OIDC_CLIENT_SECRET` = BYU app secret
 - `BYU_OIDC_ISSUER` = BYU issuer URL
 - `NEXT_PUBLIC_BYU_SSO_ENABLED` = `true`
+- `CANVAS_BASE_URL` = `https://byu.instructure.com`
 
 Optional calendar vars:
 
@@ -64,6 +65,7 @@ npm run prisma:deploy
 4. Open settings sidebar (top-left gear icon).
 5. Connect each LMS provider and click `Sync now`.
 6. Confirm assignments appear in list and calendar views.
+7. For Canvas, enter Canvas API token and base URL in the settings sidebar before connecting.
 
 ## 7. Troubleshooting
 
