@@ -20,6 +20,7 @@ interface Props {
   onChange: (theme: ThemeId) => void;
   onSignOut: () => void;
   onSyncComplete: () => Promise<void>;
+  onRunSetupWizard: () => void;
 }
 
 const LMS_PROVIDERS: Array<{ id: LmsProvider; label: string }> = [
@@ -36,7 +37,8 @@ export function SettingsSidebar({
   value,
   onChange,
   onSignOut,
-  onSyncComplete
+  onSyncComplete,
+  onRunSetupWizard
 }: Props) {
   const [tokens, setTokens] = useState<Record<LmsProvider, string>>({
     LEARNING_SUITE: "",
@@ -161,6 +163,9 @@ export function SettingsSidebar({
         </div>
 
         <div style={{ display: "grid", gap: "0.6rem", marginTop: "1rem" }}>
+          <button type="button" onClick={onRunSetupWizard}>
+            Run setup wizard again
+          </button>
           <button type="button" onClick={onSignOut}>
             Sign out
           </button>

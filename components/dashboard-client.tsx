@@ -84,6 +84,7 @@ export function DashboardClient() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [hasConnections, setHasConnections] = useState<boolean | null>(null);
+  const [showSetupWizard, setShowSetupWizard] = useState(false);
 
   async function loadAssignments() {
     setLoading(true);
@@ -174,16 +175,21 @@ export function DashboardClient() {
         value={theme}
         onChange={setTheme}
         onSyncComplete={loadAssignments}
+        onRunSetupWizard={() => {
+          setShowSetupWizard(true);
+          setSettingsOpen(false);
+        }}
         onSignOut={() => signOut({ callbackUrl: "/sign-in" })}
       />
       <header style={{ marginBottom: "1.3rem", display: "grid", gap: "0.6rem" }}>
         <h1>HomeBase</h1>
         <p className="muted">Unified assignments from Learning Suite, Canvas, Gradescope, and Max.</p>
-        {hasConnections === false ? (
+        {hasConnections === false || showSetupWizard ? (
           <OnboardingConnectionWizard
             onDone={async () => {
               await loadAssignments();
               setHasConnections(true);
+              setShowSetupWizard(false);
             }}
           />
         ) : null}
