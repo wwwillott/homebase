@@ -122,7 +122,15 @@ export function DashboardClient() {
   }, [theme]);
 
   const sortedItems = useMemo(
-    () => [...items].sort((a, b) => +new Date(a.mergedFields.dueAt) - +new Date(b.mergedFields.dueAt)),
+    () =>
+      [...items].sort((a, b) => {
+        const aTs = +new Date(a.mergedFields.dueAt);
+        const bTs = +new Date(b.mergedFields.dueAt);
+        if (Number.isNaN(aTs) && Number.isNaN(bTs)) return 0;
+        if (Number.isNaN(aTs)) return 1;
+        if (Number.isNaN(bTs)) return -1;
+        return aTs - bTs;
+      }),
     [items]
   );
 

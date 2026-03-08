@@ -68,6 +68,7 @@ export function AssignmentList({ items, onToggled }: Props) {
               >
                 {item.mergedFields.courseName}
               </span>
+              <small>Source: {formatSource(item.mergedFields.source)}</small>
               <small>Type: {item.mergedFields.assignmentType}</small>
               <small>{new Date(item.mergedFields.dueAt).toLocaleString()}</small>
               <small>Status: {item.mergedFields.status}</small>
@@ -77,4 +78,19 @@ export function AssignmentList({ items, onToggled }: Props) {
       </div>
     </div>
   );
+}
+
+function formatSource(source: AggregatedAssignment["mergedFields"]["source"]) {
+  switch (source) {
+    case "CANVAS":
+      return "Canvas";
+    case "GRADESCOPE":
+      return "Gradescope";
+    case "LEARNING_SUITE":
+      return "Learning Suite";
+    case "MAX":
+      return "Max";
+    default:
+      return source;
+  }
 }

@@ -51,6 +51,7 @@ export interface AggregatedAssignment {
   memberAssignmentIds: string[];
   dedupeConfidence: number;
   mergedFields: {
+    source: LmsProvider;
     title: string;
     description?: string;
     dueAt: Date;

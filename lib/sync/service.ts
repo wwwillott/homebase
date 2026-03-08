@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { getConnector } from "@/lib/connectors";
 import { scoreDuplicate } from "@/lib/dedupe/scoring";
 import { decrypt } from "@/lib/security";
+import { summarizeAssignmentDescription } from "@/lib/assignments/description";
 import {
   getConnectorState,
   listAssignmentFilterMeta,
@@ -152,8 +153,10 @@ export async function getAssignments(
     memberAssignmentIds: assignment.dedupeGroupId ? [assignment.id] : [assignment.id],
     dedupeConfidence: assignment.dedupeGroupId ? 0.75 : 1,
     mergedFields: {
+      source: assignment.source,
       title: assignment.title,
-      description: assignment.description ?? undefined,
+      // Clean legacy HTML-rich descriptions that may exist from earlier sync versions.
+      description: summarizeAssignmentDescription(assignment.description),
       dueAt: assignment.dueAt,
       courseName: assignment.courseName,
       courseColor: assignment.courseColor ?? undefined,
