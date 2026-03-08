@@ -236,6 +236,15 @@ main {
   margin-bottom: 0.8rem;
 }
 
+.connector-row {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--panel) 90%, var(--bg) 10%);
+}
+
 @media (min-width: 900px) {
   .grid {
     grid-template-columns: 2fr 1fr;
@@ -267,6 +276,9 @@ h3 {
 
 button,
 select,
+input[type="text"],
+input[type="email"],
+input[type="password"],
 input[type="checkbox"] {
   border: 1px solid var(--line);
   border-radius: 10px;

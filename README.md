@@ -75,6 +75,36 @@ Additional `GET /api/assignments` filters:
 6. Start app: `npm run dev`
 7. Start worker (optional): `npm run worker`
 
+## Production Deployment (Vercel + Postgres + Redis)
+
+1. Create managed services:
+   - PostgreSQL (Neon/Supabase/Railway)
+   - Redis (Upstash/Redis Cloud)
+2. Deploy this repo to Vercel.
+3. In Vercel Project Settings -> Environment Variables, set:
+   - `DATABASE_URL`
+   - `REDIS_URL`
+   - `AUTH_SECRET`
+   - `NEXTAUTH_URL=https://your-domain`
+   - `ENCRYPTION_KEY`
+   - `BYU_OIDC_CLIENT_ID`
+   - `BYU_OIDC_CLIENT_SECRET`
+   - `BYU_OIDC_ISSUER`
+   - `NEXT_PUBLIC_BYU_SSO_ENABLED=true`
+4. In BYU OIDC app settings, configure callback URL:
+   - `https://your-domain/api/auth/callback/byu`
+5. Run DB migrations on production database:
+   - `npm run prisma:deploy`
+6. Open `https://your-domain/sign-in` and test:
+   - BYU SSO sign-in
+   - local account sign-up/sign-in
+   - connect LMS providers from the settings sidebar and run `Sync now`.
+
+Notes:
+- BYU SSO requires a real BYU OIDC client registration.
+- Current LMS connectors are scaffold/mock connectors, so auth and sync flow work but provider API adapters still need production integration.
+- Full deployment checklist: [DEPLOYMENT.md](./DEPLOYMENT.md)
+
 ## Current Scope
 
 - LMS connectors currently use scaffold/mock sync payloads for development flow validation.
