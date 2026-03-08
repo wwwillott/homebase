@@ -37,6 +37,11 @@ Students often miss assignments because due dates are scattered across multiple 
   - Midnight Focus
   - Campus Retro
 - Theme previews in a settings sidebar opened from the top-left settings icon.
+- First-run connection wizard for users with no LMS accounts connected:
+  - Step 1: capture schedule (course name + LMS platform)
+  - Step 2: Canvas connection guidance
+  - Step 3: Learning Suite iCal feed entry per LS course
+  - Includes LS notice: if the teacher changes schedule, refresh iCal feed links periodically.
 
 ## Tech Stack
 

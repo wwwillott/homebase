@@ -4,6 +4,7 @@ import { signOut } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 import { AssignmentList } from "@/components/assignment-list";
 import { InsightsPanel } from "@/components/insights-panel";
+import { OnboardingConnectionWizard } from "@/components/onboarding-connection-wizard";
 import { ScheduleView } from "@/components/schedule-view";
 import { SettingsSidebar } from "@/components/settings-sidebar";
 import { ThemeOption } from "@/components/theme-preview-picker";
@@ -82,6 +83,7 @@ export function DashboardClient() {
   const [theme, setTheme] = useState<ThemeId>("terminal-study");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [hasConnections, setHasConnections] = useState<boolean | null>(null);
 
   async function loadAssignments() {
     setLoading(true);
@@ -105,6 +107,20 @@ export function DashboardClient() {
   useEffect(() => {
     loadAssignments().catch(() => setLoading(false));
   }, [view, classId, assignmentType, completion]);
+
+  useEffect(() => {
+    async function loadConnectorStatus() {
+      const response = await fetch("/api/connectors/status");
+      if (!response.ok) {
+        setHasConnections(true);
+        return;
+      }
+      const payload = (await response.json()) as { hasConnections?: boolean };
+      setHasConnections(Boolean(payload.hasConnections));
+    }
+
+    loadConnectorStatus().catch(() => setHasConnections(true));
+  }, []);
 
   useEffect(() => {
     const stored = localStorage.getItem(THEME_STORAGE_KEY) as ThemeId | null;
@@ -163,6 +179,14 @@ export function DashboardClient() {
       <header style={{ marginBottom: "1.3rem", display: "grid", gap: "0.6rem" }}>
         <h1>HomeBase</h1>
         <p className="muted">Unified assignments from Learning Suite, Canvas, Gradescope, and Max.</p>
+        {hasConnections === false ? (
+          <OnboardingConnectionWizard
+            onDone={async () => {
+              await loadAssignments();
+              setHasConnections(true);
+            }}
+          />
+        ) : null}
         <ViewModeSwitch value={view} onChange={setView} />
         <div className="row">
           <select value={classId} onChange={(e) => setClassId(e.target.value)}>
