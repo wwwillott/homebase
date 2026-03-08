@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 export default function SignInPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <main style={{ maxWidth: 480, margin: "3rem auto", padding: "1rem" }}>
@@ -25,17 +28,30 @@ export default function SignInPage() {
           onSubmit={async (event) => {
             event.preventDefault();
             setError(null);
-            const result = await signIn("credentials", {
-              email,
-              password,
-              redirect: false,
-              callbackUrl: "/"
-            });
-            if (result?.error) {
-              setError("Invalid email/password");
-              return;
+            setSubmitting(true);
+            try {
+              const result = await signIn("credentials", {
+                email,
+                password,
+                redirect: false,
+                callbackUrl: "/"
+              });
+              if (!result) {
+                setError("Sign in failed. No response from auth server.");
+                return;
+              }
+              if (result.error) {
+                setError(result.error === "CredentialsSignin" ? "Invalid email/password" : result.error);
+                return;
+              }
+
+              router.replace(result.url ?? "/");
+              router.refresh();
+            } catch {
+              setError("Sign in failed. Check network/settings and try again.");
+            } finally {
+              setSubmitting(false);
             }
-            window.location.href = "/";
           }}
           style={{ display: "grid", gap: "0.6rem" }}
         >
@@ -54,7 +70,9 @@ export default function SignInPage() {
             required
             minLength={8}
           />
-          <button type="submit">Sign In</button>
+          <button type="submit" disabled={submitting}>
+            {submitting ? "Signing in..." : "Sign In"}
+          </button>
         </form>
 
         {error ? <small style={{ color: "#b91c1c" }}>{error}</small> : null}

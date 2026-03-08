@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 export default function SignUpPage() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <main style={{ maxWidth: 480, margin: "3rem auto", padding: "1rem" }}>
@@ -20,29 +23,36 @@ export default function SignUpPage() {
           onSubmit={async (event) => {
             event.preventDefault();
             setError(null);
+            setSubmitting(true);
+            try {
+              const response = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, password })
+              });
 
-            const response = await fetch("/api/auth/register", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ name, email, password })
-            });
+              if (!response.ok) {
+                setError("Unable to create account. Try a different email.");
+                return;
+              }
 
-            if (!response.ok) {
-              setError("Unable to create account. Try a different email.");
-              return;
+              const result = await signIn("credentials", {
+                email,
+                password,
+                redirect: false,
+                callbackUrl: "/"
+              });
+              if (!result || result.error) {
+                setError("Account created, but automatic sign-in failed.");
+                return;
+              }
+              router.replace(result.url ?? "/");
+              router.refresh();
+            } catch {
+              setError("Account creation failed. Check network/settings and try again.");
+            } finally {
+              setSubmitting(false);
             }
-
-            const result = await signIn("credentials", {
-              email,
-              password,
-              redirect: false,
-              callbackUrl: "/"
-            });
-            if (result?.error) {
-              setError("Account created, but automatic sign-in failed.");
-              return;
-            }
-            window.location.href = "/";
           }}
           style={{ display: "grid", gap: "0.6rem" }}
         >
@@ -62,7 +72,9 @@ export default function SignUpPage() {
             required
             minLength={8}
           />
-          <button type="submit">Create Account</button>
+          <button type="submit" disabled={submitting}>
+            {submitting ? "Creating..." : "Create Account"}
+          </button>
         </form>
 
         {error ? <small style={{ color: "#b91c1c" }}>{error}</small> : null}
