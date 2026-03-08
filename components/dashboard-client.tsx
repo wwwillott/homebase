@@ -79,7 +79,7 @@ export function DashboardClient() {
   const [classId, setClassId] = useState<string>("all");
   const [assignmentType, setAssignmentType] = useState<string>("all");
   const [completion, setCompletion] = useState<"all" | "incomplete" | "complete">("all");
-  const [theme, setTheme] = useState<ThemeId>("scholar-paper");
+  const [theme, setTheme] = useState<ThemeId>("terminal-study");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -113,7 +113,7 @@ export function DashboardClient() {
       document.documentElement.dataset.theme = stored;
       return;
     }
-    document.documentElement.dataset.theme = "scholar-paper";
+    document.documentElement.dataset.theme = "terminal-study";
   }, []);
 
   useEffect(() => {
