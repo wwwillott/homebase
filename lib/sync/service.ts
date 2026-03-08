@@ -187,13 +187,13 @@ export async function setAssignmentCompletion(
   });
 }
 
-export async function resolveDuplicateGroup(groupId: string, keepAssignmentId: string) {
+export async function resolveDuplicateGroup(userId: string, groupId: string, keepAssignmentId: string) {
   const group = await prisma.duplicateGroup.findUnique({
     where: { id: groupId },
     include: { assignments: true }
   });
 
-  if (!group) {
+  if (!group || group.userId !== userId) {
     throw new Error("Duplicate group not found");
   }
 

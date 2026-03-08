@@ -16,9 +16,10 @@ interface Props {
   themes: ThemeOption[];
   value: ThemeId;
   onChange: (theme: ThemeId) => void;
+  onSignOut: () => void;
 }
 
-export function SettingsSidebar({ open, onClose, themes, value, onChange }: Props) {
+export function SettingsSidebar({ open, onClose, themes, value, onChange, onSignOut }: Props) {
   return (
     <>
       {open ? <button type="button" className="settings-overlay" onClick={onClose} aria-label="Close settings" /> : null}
@@ -32,6 +33,9 @@ export function SettingsSidebar({ open, onClose, themes, value, onChange }: Prop
         <div style={{ display: "grid", gap: "0.7rem" }}>
           <strong>Theme</strong>
           <ThemePreviewPicker themes={themes} value={value} onChange={onChange} />
+          <button type="button" onClick={onSignOut}>
+            Sign out
+          </button>
         </div>
       </aside>
     </>

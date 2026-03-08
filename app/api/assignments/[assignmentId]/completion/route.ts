@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { auth } from "@/auth";
 import { setAssignmentCompletion } from "@/lib/sync/service";
 
 const schema = z.object({
-  userId: z.string().min(1),
   completed: z.boolean()
 });
 
@@ -11,6 +11,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ assignmentId: string }> }
 ) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
@@ -19,7 +24,7 @@ export async function PATCH(
 
   try {
     const updated = await setAssignmentCompletion(
-      parsed.data.userId,
+      session.user.id,
       (await params).assignmentId,
       parsed.data.completed
     );

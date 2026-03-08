@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { auth } from "@/auth";
 import { updateReminderSettings } from "@/lib/reminders/service";
 
 const schema = z.object({
-  userId: z.string().min(1),
   enabled: z.boolean().optional(),
   emailEnabled: z.boolean().optional(),
   inAppEnabled: z.boolean().optional(),
@@ -12,13 +12,18 @@ const schema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const reminder = await updateReminderSettings(parsed.data.userId, {
+  const reminder = await updateReminderSettings(session.user.id, {
     enabled: parsed.data.enabled,
     emailEnabled: parsed.data.emailEnabled,
     inAppEnabled: parsed.data.inAppEnabled,

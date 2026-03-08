@@ -1,5 +1,6 @@
 import "./globals.css";
 import { ReactNode } from "react";
+import { Providers } from "@/components/providers";
 import {
   Bricolage_Grotesque,
   DM_Serif_Display,
@@ -60,7 +61,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={fontVariables}>
       <body>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

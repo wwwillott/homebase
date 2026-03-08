@@ -4,11 +4,10 @@ import { AggregatedAssignment } from "@/types/lms";
 
 interface Props {
   items: AggregatedAssignment[];
-  userId: string;
   onToggled: () => Promise<void>;
 }
 
-export function AssignmentList({ items, userId, onToggled }: Props) {
+export function AssignmentList({ items, onToggled }: Props) {
   if (items.length === 0) {
     return <p className="muted">No assignments found for this range.</p>;
   }
@@ -41,7 +40,6 @@ export function AssignmentList({ items, userId, onToggled }: Props) {
                       method: "PATCH",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
-                        userId,
                         completed: event.currentTarget.checked
                       })
                     });

@@ -15,6 +15,10 @@ Students often miss assignments because due dates are scattered across multiple 
 
 ## Core Features
 
+- Authentication:
+  - Local account sign-up/sign-in (email + password).
+  - Optional BYU SSO via OIDC when configured.
+  - Session-scoped API access (no client-supplied `userId` required).
 - Multi-user Postgres data model with encrypted credential/token storage.
 - Provider connector architecture with a shared LMS normalization contract.
 - Manual sync API plus background worker hooks for scheduled sync/reminders.
@@ -45,7 +49,7 @@ Students often miss assignments because due dates are scattered across multiple 
 
 - `POST /api/connectors/:provider/connect`
 - `POST /api/sync/run`
-- `GET /api/assignments?view=daily|weekly|monthly|list&start&end&classId&status&userId=...`
+- `GET /api/assignments?view=daily|weekly|monthly|list&start&end&classId&status`
 - `PATCH /api/assignments/:assignmentId/completion`
 - `POST /api/duplicates/:groupId/resolve`
 - `POST /api/calendar/google/connect`
@@ -64,8 +68,12 @@ Additional `GET /api/assignments` filters:
 2. Install dependencies: `npm install`
 3. Generate Prisma client: `npm run prisma:generate`
 4. Run DB migrations: `npm run prisma:migrate`
-5. Start app: `npm run dev`
-6. Start worker (optional): `npm run worker`
+5. Set auth vars in `.env`:
+   - `AUTH_SECRET` (required)
+   - BYU SSO vars (`BYU_OIDC_CLIENT_ID`, `BYU_OIDC_CLIENT_SECRET`, `BYU_OIDC_ISSUER`) if using BYU login
+   - `NEXT_PUBLIC_BYU_SSO_ENABLED=true` to show BYU button on sign-in page
+6. Start app: `npm run dev`
+7. Start worker (optional): `npm run worker`
 
 ## Current Scope
 

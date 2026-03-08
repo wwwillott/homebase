@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
 import { generateIcs } from "@/lib/calendar/service";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ userId: string }> }) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { userId } = await params;
+  if (session.user.id !== userId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const assignments = await prisma.assignment.findMany({
     where: { userId, status: "OPEN" },
     orderBy: { dueAt: "asc" },
