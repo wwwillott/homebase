@@ -72,16 +72,22 @@ if (process.env.BYU_OIDC_CLIENT_ID && process.env.BYU_OIDC_CLIENT_SECRET && proc
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
   secret: process.env.AUTH_SECRET,
   providers,
   pages: {
     signIn: "/sign-in"
   },
   callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
+    async jwt({ token, user }) {
+      if (user?.id) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user && token.id) {
+        session.user.id = String(token.id);
       }
       return session;
     }
