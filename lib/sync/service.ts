@@ -138,9 +138,12 @@ export async function getAssignments(
     params.start && params.end
       ? { start: params.start, end: params.end }
       : startAndEndForView(params.view);
+  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const effectiveStart =
+    params.view === "list" && range.start < oneWeekAgo ? oneWeekAgo : range.start;
 
   const assignments = await listAssignmentsForRange(userId, {
-    start: range.start,
+    start: effectiveStart,
     end: range.end,
     classId: params.classId,
     assignmentType: params.assignmentType,
