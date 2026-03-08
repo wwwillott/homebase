@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ManagedClass } from "@/components/connection-manager-panel";
 import { LmsProvider } from "@/types/lms";
 
 type CourseRow = {
@@ -11,6 +12,7 @@ type CourseRow = {
 
 interface Props {
   onDone: () => Promise<void>;
+  onCaptureClasses?: (classes: ManagedClass[]) => void;
 }
 
 const PLATFORMS: LmsProvider[] = ["LEARNING_SUITE", "CANVAS", "GRADESCOPE", "MAX"];
@@ -24,7 +26,7 @@ function createCourse(defaultPlatform: LmsProvider = "CANVAS"): CourseRow {
   };
 }
 
-export function OnboardingConnectionWizard({ onDone }: Props) {
+export function OnboardingConnectionWizard({ onDone, onCaptureClasses }: Props) {
   const [step, setStep] = useState(1);
   const [courses, setCourses] = useState<CourseRow[]>([createCourse()]);
   const [canvasToken, setCanvasToken] = useState("");
@@ -187,9 +189,19 @@ export function OnboardingConnectionWizard({ onDone }: Props) {
             </button>
             <button
               type="button"
-              onClick={() =>
-                setStep(hasCanvasCourses ? 2 : learningSuiteCourses.length > 0 ? 3 : 4)
-              }
+              onClick={() => {
+                onCaptureClasses?.(
+                  safeCourses
+                    .filter((course) => course.name.trim())
+                    .map((course) => ({
+                      id: course.id,
+                      name: course.name.trim(),
+                      lms: course.platform,
+                      learningSuiteFeedUrl: learningSuiteFeeds[course.id] ?? ""
+                    }))
+                );
+                setStep(hasCanvasCourses ? 2 : learningSuiteCourses.length > 0 ? 3 : 4);
+              }}
             >
               Continue
             </button>

@@ -3,6 +3,10 @@
 import { signOut } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 import { AssignmentList } from "@/components/assignment-list";
+import {
+  ConnectionManagerPanel,
+  ManagedClass
+} from "@/components/connection-manager-panel";
 import { InsightsPanel } from "@/components/insights-panel";
 import { OnboardingConnectionWizard } from "@/components/onboarding-connection-wizard";
 import { ScheduleView } from "@/components/schedule-view";
@@ -12,6 +16,7 @@ import { ViewModeSwitch } from "@/components/view-mode-switch";
 import { AggregatedAssignment } from "@/types/lms";
 
 const THEME_STORAGE_KEY = "homebase-theme";
+const CLASS_MANAGER_STORAGE_KEY = "homebase-class-manager-v1";
 
 type ThemeId =
   | "scholar-paper"
@@ -82,9 +87,11 @@ export function DashboardClient() {
   const [completion, setCompletion] = useState<"all" | "incomplete" | "complete">("all");
   const [theme, setTheme] = useState<ThemeId>("terminal-study");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [connectionManagerOpen, setConnectionManagerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [hasConnections, setHasConnections] = useState<boolean | null>(null);
   const [showSetupWizard, setShowSetupWizard] = useState(false);
+  const [managedClasses, setManagedClasses] = useState<ManagedClass[]>([]);
 
   async function loadAssignments() {
     setLoading(true);
@@ -134,9 +141,33 @@ export function DashboardClient() {
   }, []);
 
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CLASS_MANAGER_STORAGE_KEY);
+      if (!raw) {
+        return;
+      }
+      const parsed = JSON.parse(raw) as ManagedClass[];
+      if (Array.isArray(parsed)) {
+        setManagedClasses(
+          parsed.filter(
+            (item): item is ManagedClass =>
+              Boolean(item && typeof item.id === "string" && typeof item.lms === "string")
+          )
+        );
+      }
+    } catch {
+      // Ignore corrupted local state and let user rebuild class manager entries.
+    }
+  }, []);
+
+  useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem(CLASS_MANAGER_STORAGE_KEY, JSON.stringify(managedClasses));
+  }, [managedClasses]);
 
   const sortedItems = useMemo(
     () =>
@@ -168,24 +199,57 @@ export function DashboardClient() {
           <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
         </svg>
       </button>
+      <button
+        type="button"
+        className="connections-trigger"
+        onClick={() => setConnectionManagerOpen(true)}
+        aria-label="Open connection manager"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M10.5 6.5a4 4 0 1 0 0 8h3"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M13.5 9.5a4 4 0 1 1 0 8h-3"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
       <SettingsSidebar
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         themes={THEMES}
         value={theme}
         onChange={setTheme}
-        onSyncComplete={loadAssignments}
         onRunSetupWizard={() => {
           setShowSetupWizard(true);
           setSettingsOpen(false);
         }}
+        classes={managedClasses}
+        onOpenConnectionManager={() => {
+          setSettingsOpen(false);
+          setConnectionManagerOpen(true);
+        }}
         onSignOut={() => signOut({ callbackUrl: "/sign-in" })}
+      />
+      <ConnectionManagerPanel
+        open={connectionManagerOpen}
+        onClose={() => setConnectionManagerOpen(false)}
+        classes={managedClasses}
+        onClassesChange={setManagedClasses}
+        onSyncComplete={loadAssignments}
       />
       <header style={{ marginBottom: "1.3rem", display: "grid", gap: "0.6rem" }}>
         <h1>HomeBase</h1>
         <p className="muted">Unified assignments from Learning Suite, Canvas, Gradescope, and Max.</p>
         {hasConnections === false || showSetupWizard ? (
           <OnboardingConnectionWizard
+            onCaptureClasses={(captured) => setManagedClasses(captured)}
             onDone={async () => {
               await loadAssignments();
               setHasConnections(true);

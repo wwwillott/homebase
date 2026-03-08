@@ -202,6 +202,19 @@ main {
   padding: 0;
 }
 
+.connections-trigger {
+  position: fixed;
+  top: 0.9rem;
+  left: 3.6rem;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+}
+
 .settings-overlay {
   position: fixed;
   inset: 0;
@@ -243,6 +256,20 @@ main {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: color-mix(in srgb, var(--panel) 90%, var(--bg) 10%);
+}
+
+.ls-connected-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--accent) 25%, var(--panel));
+  color: var(--text);
+  font-size: 0.65rem;
+  font-weight: 700;
 }
 
 @media (min-width: 900px) {

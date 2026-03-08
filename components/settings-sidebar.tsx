@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { ManagedClass } from "@/components/connection-manager-panel";
 import { ThemeOption, ThemePreviewPicker } from "@/components/theme-preview-picker";
 import { LmsProvider } from "@/types/lms";
 
@@ -19,8 +19,9 @@ interface Props {
   value: ThemeId;
   onChange: (theme: ThemeId) => void;
   onSignOut: () => void;
-  onSyncComplete: () => Promise<void>;
   onRunSetupWizard: () => void;
+  classes: ManagedClass[];
+  onOpenConnectionManager: () => void;
 }
 
 const LMS_PROVIDERS: Array<{ id: LmsProvider; label: string }> = [
@@ -37,62 +38,10 @@ export function SettingsSidebar({
   value,
   onChange,
   onSignOut,
-  onSyncComplete,
-  onRunSetupWizard
+  onRunSetupWizard,
+  classes,
+  onOpenConnectionManager
 }: Props) {
-  const [tokens, setTokens] = useState<Record<LmsProvider, string>>({
-    LEARNING_SUITE: "",
-    CANVAS: "",
-    GRADESCOPE: "",
-    MAX: ""
-  });
-  const [canvasBaseUrl, setCanvasBaseUrl] = useState("");
-  const [status, setStatus] = useState<string>("");
-
-  async function connectProvider(provider: LmsProvider) {
-    setStatus(`Connecting ${provider}...`);
-    const response = await fetch(`/api/connectors/${provider}/connect`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        token: tokens[provider] || `manual-${provider.toLowerCase()}`,
-        baseUrl: provider === "CANVAS" ? canvasBaseUrl || undefined : undefined
-      })
-    });
-
-    if (!response.ok) {
-      let reason = "Unknown error";
-      try {
-        const payload = (await response.json()) as { error?: string };
-        if (payload.error) {
-          reason = payload.error;
-        }
-      } catch {
-        reason = `${response.status} ${response.statusText}`;
-      }
-      setStatus(`Failed to connect ${provider}: ${reason}`);
-      return;
-    }
-
-    setStatus(`Connected ${provider}.`);
-  }
-
-  async function syncNow() {
-    setStatus("Syncing assignments...");
-    const response = await fetch("/api/sync/run", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({})
-    });
-    if (!response.ok) {
-      setStatus("Sync failed.");
-      return;
-    }
-
-    await onSyncComplete();
-    setStatus("Sync complete.");
-  }
-
   return (
     <>
       {open ? <button type="button" className="settings-overlay" onClick={onClose} aria-label="Close settings" /> : null}
@@ -109,57 +58,27 @@ export function SettingsSidebar({
         </div>
 
         <div style={{ display: "grid", gap: "0.6rem", marginTop: "1rem" }}>
-          <strong>Connect LMS</strong>
-          {LMS_PROVIDERS.map((provider) => (
-            <div key={provider.id} className="connector-row">
-              <label>{provider.label}</label>
-              <input
-                type="text"
-                value={tokens[provider.id]}
-                onChange={(event) =>
-                  setTokens((current) => ({
-                    ...current,
-                    [provider.id]: event.currentTarget.value
-                  }))
-                }
-                placeholder={
-                  provider.id === "LEARNING_SUITE"
-                    ? "Learning Suite iCalendar feed URL"
-                    : "Token / code / username"
-                }
-              />
-              {provider.id === "CANVAS" ? (
-                <>
-                  <input
-                    type="text"
-                    value={canvasBaseUrl}
-                    onChange={(event) => setCanvasBaseUrl(event.currentTarget.value)}
-                    placeholder="Canvas base URL (e.g. https://byu.instructure.com)"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const encodedBaseUrl = encodeURIComponent(canvasBaseUrl.trim());
-                      const destination = canvasBaseUrl.trim()
-                        ? `/api/connectors/canvas/oauth/start?baseUrl=${encodedBaseUrl}`
-                        : "/api/connectors/canvas/oauth/start";
-                      window.location.assign(destination);
-                    }}
+          <strong>Class Manager</strong>
+          {classes.map((item) => (
+            <div key={item.id} className="connector-row">
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <span>{item.name || "Unnamed class"}</span>
+                {item.lms === "LEARNING_SUITE" && item.learningSuiteConnected ? (
+                  <span
+                    className="ls-connected-icon"
+                    title="learning suite has been connected for this class"
+                    aria-label="learning suite has been connected for this class"
                   >
-                    Connect with Canvas OAuth
-                  </button>
-                  <a href="/api/connectors/canvas/oauth/start">Open Canvas OAuth Link</a>
-                </>
-              ) : null}
-              <button type="button" onClick={() => connectProvider(provider.id)}>
-                Connect
-              </button>
+                    LS
+                  </span>
+                ) : null}
+              </div>
+              <small className="muted">Platform: {LMS_PROVIDERS.find((p) => p.id === item.lms)?.label ?? item.lms}</small>
             </div>
           ))}
-          <button type="button" onClick={syncNow}>
-            Sync now
+          <button type="button" onClick={onOpenConnectionManager}>
+            Open Connection Manager
           </button>
-          {status ? <small>{status}</small> : null}
         </div>
 
         <div style={{ display: "grid", gap: "0.6rem", marginTop: "1rem" }}>
