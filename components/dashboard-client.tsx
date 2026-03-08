@@ -149,6 +149,7 @@ export function DashboardClient() {
         themes={THEMES}
         value={theme}
         onChange={setTheme}
+        onSyncComplete={loadAssignments}
         onSignOut={() => signOut({ callbackUrl: "/sign-in" })}
       />
       <header style={{ marginBottom: "1.3rem", display: "grid", gap: "0.6rem" }}>
