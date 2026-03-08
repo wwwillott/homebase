@@ -1,21 +1,47 @@
-# HomeBase LMS Aggregator
+# HomeBase
 
-Unified assignment dashboard for Learning Suite LMS, Canvas, Gradescope, and Max.
+HomeBase is a unified assignment aggregator for students whose schools use multiple LMS platforms.  
+It pulls work from Learning Suite LMS, Canvas, Gradescope, and Max into one place, deduplicates conservatively, and presents assignments in calendar and list formats.
 
-## Features (v1 scaffold)
+## What It Solves
 
-- Multi-user data model with encrypted connector tokens.
-- LMS connector contract with API-first/fallback-ready connector implementations.
-- Manual sync endpoint + worker-ready queue integration.
-- Conservative dedupe scoring with possible-duplicate review support.
-- Assignment views: daily / weekly / monthly / list.
-- Class sorting and color-tag rendering.
-- Reminder settings API and due-soon reminder selector.
-- Google + Apple/ICS one-way calendar connection primitives.
-- ICS export endpoint for calendar subscriptions.
-- Theme selector with persistent user preference and six built-in visual themes.
+Students often miss assignments because due dates are scattered across multiple systems. HomeBase centralizes this data so users can:
 
-## API Endpoints
+- See all assignments sorted by due date.
+- Switch between daily, weekly, monthly, and list views.
+- Filter quickly by class, assignment type, and completion state.
+- Mark work complete with checkbox-based status updates.
+- Keep uncertain duplicates visible (fail-open policy: if unsure, include it).
+
+## Core Features
+
+- Multi-user Postgres data model with encrypted credential/token storage.
+- Provider connector architecture with a shared LMS normalization contract.
+- Manual sync API plus background worker hooks for scheduled sync/reminders.
+- Conservative duplicate detection with possible-duplicate review support.
+- Assignment completion controls (checkbox, strike-through, greying).
+- Class color tags and assignment detail/description display.
+- One-way calendar integration primitives:
+  - Google calendar connection endpoint.
+  - Apple/ICS connection path.
+  - ICS subscription feed export.
+- Six built-in visual themes with persistent user preference:
+  - Scholar Paper
+  - Terminal Study
+  - Sunrise Calendar
+  - Studio Minimal
+  - Midnight Focus
+  - Campus Retro
+- Theme previews in a settings sidebar opened from the top-left settings icon.
+
+## Tech Stack
+
+- Next.js App Router + React + TypeScript
+- Prisma ORM + PostgreSQL
+- BullMQ worker scaffolding + Redis
+- Vitest for unit/integration/UI-model tests
+
+## API Surface
 
 - `POST /api/connectors/:provider/connect`
 - `POST /api/sync/run`
@@ -27,22 +53,21 @@ Unified assignment dashboard for Learning Suite LMS, Canvas, Gradescope, and Max
 - `POST /api/reminders/settings`
 - `GET /api/ics/:userId`
 
-`GET /api/assignments` supports additional filters:
+Additional `GET /api/assignments` filters:
+
 - `assignmentType=HOMEWORK|QUIZ|EXAM|PROJECT|READING|DISCUSSION|OTHER`
 - `completion=all|incomplete|complete`
 
-## Run
+## Local Development
 
-1. Copy `.env.example` to `.env` and fill values.
-2. Install deps: `npm install`
-3. Generate client: `npm run prisma:generate`
-4. Migrate DB: `npm run prisma:migrate`
+1. Copy `.env.example` to `.env`.
+2. Install dependencies: `npm install`
+3. Generate Prisma client: `npm run prisma:generate`
+4. Run DB migrations: `npm run prisma:migrate`
 5. Start app: `npm run dev`
 6. Start worker (optional): `npm run worker`
 
-## Notes
+## Current Scope
 
-- Connector implementations are scaffolded with mock sync payloads and normalized schemas.
-- Integrate provider-specific OAuth/API flows per LMS in `lib/connectors/providers.ts`.
-- Calendar sync currently provides storage + ICS generation + stable external event IDs.
-- Available themes: Scholar Paper, Terminal Study, Sunrise Calendar, Studio Minimal, Midnight Focus, Campus Retro.
+- LMS connectors currently use scaffold/mock sync payloads for development flow validation.
+- Production integrations still require provider-specific auth/API implementations in `lib/connectors/providers.ts`.
