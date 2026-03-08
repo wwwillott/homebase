@@ -73,6 +73,8 @@ Additional `GET /api/assignments` filters:
    - BYU SSO vars (`BYU_OIDC_CLIENT_ID`, `BYU_OIDC_CLIENT_SECRET`, `BYU_OIDC_ISSUER`) if using BYU login
    - `NEXT_PUBLIC_BYU_SSO_ENABLED=true` to show BYU button on sign-in page
    - `CANVAS_BASE_URL` (defaults to `https://byu.instructure.com`)
+   - `CANVAS_OAUTH_CLIENT_ID` and `CANVAS_OAUTH_CLIENT_SECRET` (for Canvas OAuth connect)
+   - `CANVAS_OAUTH_REDIRECT_URI` (defaults to `/api/connectors/canvas/oauth/callback`)
 6. Start app: `npm run dev`
 7. Start worker (optional): `npm run worker`
 
@@ -92,6 +94,9 @@ Additional `GET /api/assignments` filters:
    - `BYU_OIDC_CLIENT_SECRET`
    - `BYU_OIDC_ISSUER`
    - `NEXT_PUBLIC_BYU_SSO_ENABLED=true`
+   - `CANVAS_OAUTH_CLIENT_ID`
+   - `CANVAS_OAUTH_CLIENT_SECRET`
+   - `CANVAS_OAUTH_REDIRECT_URI=https://your-domain/api/connectors/canvas/oauth/callback`
 4. In BYU OIDC app settings, configure callback URL:
    - `https://your-domain/api/auth/callback/byu`
 5. Run DB migrations on production database:
@@ -100,7 +105,7 @@ Additional `GET /api/assignments` filters:
    - BYU SSO sign-in
    - local account sign-up/sign-in
    - connect LMS providers from the settings sidebar and run `Sync now`.
-   - for Canvas, provide a Canvas API token and Canvas base URL.
+   - for Canvas, use `Connect with Canvas OAuth` (or token fallback) and Canvas base URL.
 
 Notes:
 - BYU SSO requires a real BYU OIDC client registration.

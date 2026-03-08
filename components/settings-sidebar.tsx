@@ -59,7 +59,16 @@ export function SettingsSidebar({
     });
 
     if (!response.ok) {
-      setStatus(`Failed to connect ${provider}.`);
+      let reason = "Unknown error";
+      try {
+        const payload = (await response.json()) as { error?: string };
+        if (payload.error) {
+          reason = payload.error;
+        }
+      } catch {
+        reason = `${response.status} ${response.statusText}`;
+      }
+      setStatus(`Failed to connect ${provider}: ${reason}`);
       return;
     }
 
@@ -114,12 +123,28 @@ export function SettingsSidebar({
                 placeholder="Token / code / username"
               />
               {provider.id === "CANVAS" ? (
-                <input
-                  type="text"
-                  value={canvasBaseUrl}
-                  onChange={(event) => setCanvasBaseUrl(event.currentTarget.value)}
-                  placeholder="Canvas base URL (e.g. https://byu.instructure.com)"
-                />
+                <>
+                  <input
+                    type="text"
+                    value={canvasBaseUrl}
+                    onChange={(event) => setCanvasBaseUrl(event.currentTarget.value)}
+                    placeholder="Canvas base URL (e.g. https://byu.instructure.com)"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      if (canvasBaseUrl.trim()) {
+                        params.set("baseUrl", canvasBaseUrl.trim());
+                      }
+                      window.location.href = `/api/connectors/canvas/oauth/start${
+                        params.size ? `?${params.toString()}` : ""
+                      }`;
+                    }}
+                  >
+                    Connect with Canvas OAuth
+                  </button>
+                </>
               ) : null}
               <button type="button" onClick={() => connectProvider(provider.id)}>
                 Connect
