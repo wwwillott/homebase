@@ -120,7 +120,11 @@ export function SettingsSidebar({
                     [provider.id]: event.currentTarget.value
                   }))
                 }
-                placeholder="Token / code / username"
+                placeholder={
+                  provider.id === "LEARNING_SUITE"
+                    ? "Learning Suite iCalendar feed URL"
+                    : "Token / code / username"
+                }
               />
               {provider.id === "CANVAS" ? (
                 <>
@@ -133,17 +137,16 @@ export function SettingsSidebar({
                   <button
                     type="button"
                     onClick={() => {
-                      const params = new URLSearchParams();
-                      if (canvasBaseUrl.trim()) {
-                        params.set("baseUrl", canvasBaseUrl.trim());
-                      }
-                      window.location.href = `/api/connectors/canvas/oauth/start${
-                        params.size ? `?${params.toString()}` : ""
-                      }`;
+                      const encodedBaseUrl = encodeURIComponent(canvasBaseUrl.trim());
+                      const destination = canvasBaseUrl.trim()
+                        ? `/api/connectors/canvas/oauth/start?baseUrl=${encodedBaseUrl}`
+                        : "/api/connectors/canvas/oauth/start";
+                      window.location.assign(destination);
                     }}
                   >
                     Connect with Canvas OAuth
                   </button>
+                  <a href="/api/connectors/canvas/oauth/start">Open Canvas OAuth Link</a>
                 </>
               ) : null}
               <button type="button" onClick={() => connectProvider(provider.id)}>

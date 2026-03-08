@@ -69,6 +69,7 @@ npm run prisma:deploy
 5. Connect each LMS provider and click `Sync now`.
 6. Confirm assignments appear in list and calendar views.
 7. For Canvas, click `Connect with Canvas OAuth` in settings and complete OAuth flow.
+8. For Learning Suite, paste iCalendar feed URL(s) in settings and click `Connect`, then `Sync now`.
 
 ## 7. Troubleshooting
 

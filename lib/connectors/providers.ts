@@ -1,7 +1,7 @@
 import { MockConnector } from "@/lib/connectors/base";
 import { summarizeAssignmentDescription } from "@/lib/assignments/description";
 import { encrypt } from "@/lib/security";
-import { normalizeTitle } from "@/lib/utils";
+import { normalizeTitle, stableHash } from "@/lib/utils";
 import {
   AssignmentType,
   ConnectorAuthPayload,
@@ -66,8 +66,73 @@ export class LearningSuiteConnector extends MockConnector {
     super("LEARNING_SUITE");
   }
 
+  async authorize(payload: ConnectorAuthPayload): Promise<{ encryptedToken: string; externalUserId?: string }> {
+    const raw = payload.token ?? payload.code;
+    if (!raw) {
+      throw new Error("Learning Suite iCalendar feed URL is required");
+    }
+
+    const feedUrls = parseFeedUrls(raw);
+    if (feedUrls.length === 0) {
+      throw new Error("Provide at least one valid iCalendar feed URL");
+    }
+
+    // Validate feed accessibility early.
+    const testResponse = await fetch(feedUrls[0], { cache: "no-store" });
+    if (!testResponse.ok) {
+      throw new Error(`Learning Suite feed request failed (${testResponse.status})`);
+    }
+    const testBody = await testResponse.text();
+    if (!testBody.includes("BEGIN:VCALENDAR")) {
+      throw new Error("URL did not return a valid iCalendar feed");
+    }
+
+    return {
+      encryptedToken: encrypt(JSON.stringify({ feedUrls }))
+    };
+  }
+
+  async syncSince(userId: string, token: string, cursor: SyncCursor) {
+    const feedUrls = parseLearningSuiteTokenPackage(token);
+    if (feedUrls.length === 0) {
+      // Fallback for tests and existing mock-token users until they reconnect with feed URL.
+      return super.syncSince(userId, token, cursor);
+    }
+    const assignments: RawLmsAssignment[] = [];
+    const now = new Date();
+
+    for (const feedUrl of feedUrls) {
+      const response = await fetch(feedUrl, { cache: "no-store" });
+      if (!response.ok) {
+        continue;
+      }
+      const ics = await response.text();
+      const parsed = parseIcsAssignments(ics, feedUrl);
+      assignments.push(
+        ...parsed.filter((assignment) => {
+          const due = new Date(assignment.dueAt);
+          if (Number.isNaN(+due)) return false;
+          // Keep upcoming and recent items; list filtering handles final cutoff.
+          return due >= new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        })
+      );
+    }
+
+    const deduped = Array.from(new Map(assignments.map((a) => [a.id, a])).values());
+    const nextCursor = new Date().toISOString();
+    return {
+      assignments: deduped,
+      nextCursor,
+      checksum: `LEARNING_SUITE-${deduped.length}-${nextCursor}`
+    };
+  }
+
   normalize(raw: RawLmsAssignment, userId: string): NormalizedAssignment {
     return normalizeGeneric(this.provider, raw, userId);
+  }
+
+  async healthCheck() {
+    return { ok: true, message: "Requires Learning Suite iCalendar feed URL." };
   }
 }
 
@@ -261,4 +326,111 @@ function parseCanvasNextLink(linkHeader: string | null): string | null {
     return match[1];
   }
   return null;
+}
+
+function parseFeedUrls(raw: string): string[] {
+  return raw
+    .split(/[\n,\s]+/g)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item) => /^https?:\/\//i.test(item));
+}
+
+function parseLearningSuiteTokenPackage(token: string): string[] {
+  try {
+    const parsed = JSON.parse(token) as { feedUrls?: string[] };
+    return parsed.feedUrls ?? [];
+  } catch {
+    // Backward-compatible fallback: plain URL/token input.
+    const urls = parseFeedUrls(token);
+    if (urls.length) return urls;
+    return [];
+  }
+}
+
+function parseIcsAssignments(ics: string, feedUrl: string): RawLmsAssignment[] {
+  const unfolded = ics.replace(/\r\n[ \t]/g, "").replace(/\r/g, "");
+  const calendarName = unfolded.match(/X-WR-CALNAME:(.+)/)?.[1]?.trim() ?? "Learning Suite";
+  const eventBlocks = unfolded.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g) ?? [];
+  const courseId = stableHash(`ls-course-${feedUrl}`).slice(0, 16);
+
+  return eventBlocks.flatMap((block) => {
+      const uid = extractIcsField(block, "UID") ?? stableHash(block);
+      const summary = extractIcsField(block, "SUMMARY") ?? "Learning Suite assignment";
+      const description = extractIcsField(block, "DESCRIPTION");
+      const dtStart = extractIcsField(block, "DTSTART");
+      const dtEnd = extractIcsField(block, "DTEND");
+      const url = extractIcsField(block, "URL");
+      const dueAt = parseIcsDateTime(dtEnd ?? dtStart);
+      if (!dueAt) {
+        return [];
+      }
+
+      const title = summary.replace(/\s+/g, " ").trim();
+      return [{
+        id: `LS-${uid}`,
+        courseId,
+        courseName: calendarName,
+        title,
+        description: summarizeAssignmentDescription(description),
+        dueAt: dueAt.toISOString(),
+        url: url ?? undefined,
+        status: "OPEN",
+        assignmentType: inferAssignmentType({
+          id: uid,
+          courseId,
+          title,
+          description: description ?? undefined,
+          dueAt: dueAt.toISOString()
+        })
+      } satisfies RawLmsAssignment];
+    });
+}
+
+function extractIcsField(block: string, key: string): string | null {
+  const regex = new RegExp(`^${key}(?:;[^:\\n]+)*:(.+)$`, "m");
+  const value = block.match(regex)?.[1];
+  return value ? decodeIcsText(value.trim()) : null;
+}
+
+function parseIcsDateTime(value: string | null): Date | null {
+  if (!value) return null;
+
+  // UTC date-time: 20260308T235900Z
+  if (/^\d{8}T\d{6}Z$/.test(value)) {
+    const iso = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}T${value.slice(9, 11)}:${value.slice(11, 13)}:${value.slice(13, 15)}Z`;
+    const parsed = new Date(iso);
+    return Number.isNaN(+parsed) ? null : parsed;
+  }
+
+  // Local date-time without explicit timezone: 20260308T235900
+  if (/^\d{8}T\d{6}$/.test(value)) {
+    const iso = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}T${value.slice(9, 11)}:${value.slice(11, 13)}:${value.slice(13, 15)}`;
+    const parsed = new Date(iso);
+    return Number.isNaN(+parsed) ? null : parsed;
+  }
+
+  // All-day date: 20260308 -> treat as end of day local time.
+  if (/^\d{8}$/.test(value)) {
+    const parsed = new Date(
+      Number(value.slice(0, 4)),
+      Number(value.slice(4, 6)) - 1,
+      Number(value.slice(6, 8)),
+      23,
+      59,
+      0
+    );
+    return Number.isNaN(+parsed) ? null : parsed;
+  }
+
+  const fallback = new Date(value);
+  return Number.isNaN(+fallback) ? null : fallback;
+}
+
+function decodeIcsText(input: string): string {
+  return input
+    .replace(/\\n/gi, "\n")
+    .replace(/\\,/g, ",")
+    .replace(/\\;/g, ";")
+    .replace(/\\\\/g, "\\");
 }

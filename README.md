@@ -106,6 +106,7 @@ Additional `GET /api/assignments` filters:
    - local account sign-up/sign-in
    - connect LMS providers from the settings sidebar and run `Sync now`.
    - for Canvas, use `Connect with Canvas OAuth` (or token fallback) and Canvas base URL.
+   - for Learning Suite, paste iCalendar feed URL(s) into the Learning Suite connector input.
 
 Notes:
 - BYU SSO requires a real BYU OIDC client registration.
@@ -115,4 +116,5 @@ Notes:
 ## Current Scope
 
 - Canvas connector now supports live API sync using token + base URL.
-- Learning Suite, Gradescope, and Max connectors are currently scaffold/mock and still need provider-specific API integration.
+- Learning Suite connector now supports live iCalendar feed sync using feed URL input.
+- Gradescope and Max connectors are currently scaffold/mock and still need provider-specific API integration.
