@@ -247,16 +247,16 @@ export function DashboardClient() {
       <header style={{ marginBottom: "1.3rem", display: "grid", gap: "0.6rem" }}>
         <h1>HomeBase</h1>
         <p className="muted">Unified assignments from Learning Suite, Canvas, Gradescope, and Max.</p>
-        {hasConnections === false || showSetupWizard ? (
-          <OnboardingConnectionWizard
-            onCaptureClasses={(captured) => setManagedClasses(captured)}
-            onDone={async () => {
-              await loadAssignments();
-              setHasConnections(true);
-              setShowSetupWizard(false);
-            }}
-          />
-        ) : null}
+        <OnboardingConnectionWizard
+          open={hasConnections === false || showSetupWizard}
+          onClose={() => setShowSetupWizard(false)}
+          onCaptureClasses={(captured) => setManagedClasses(captured)}
+          onDone={async () => {
+            await loadAssignments();
+            setHasConnections(true);
+            setShowSetupWizard(false);
+          }}
+        />
         <ViewModeSwitch value={view} onChange={setView} />
         <div className="row">
           <select value={classId} onChange={(e) => setClassId(e.target.value)}>

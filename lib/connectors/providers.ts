@@ -250,6 +250,56 @@ export class MaxConnector extends MockConnector {
     super("MAX");
   }
 
+  async authorize(payload: ConnectorAuthPayload): Promise<{ encryptedToken: string; externalUserId?: string }> {
+    const raw = payload.token ?? payload.code;
+    if (!raw) {
+      throw new Error("Max connection string/feed URL is required");
+    }
+
+    const feedUrls = parseFeedUrls(raw);
+    if (feedUrls.length === 0) {
+      throw new Error("Provide at least one valid Max feed URL");
+    }
+
+    const testResponse = await fetch(feedUrls[0], { cache: "no-store" });
+    if (!testResponse.ok) {
+      throw new Error(`Max feed request failed (${testResponse.status})`);
+    }
+    const testBody = await testResponse.text();
+    if (!testBody.includes("BEGIN:VCALENDAR")) {
+      throw new Error("URL did not return a valid iCalendar feed");
+    }
+
+    return {
+      encryptedToken: encrypt(JSON.stringify({ feedUrls }))
+    };
+  }
+
+  async syncSince(userId: string, token: string, cursor: SyncCursor) {
+    const feedUrls = parseLearningSuiteTokenPackage(token);
+    if (feedUrls.length === 0) {
+      return super.syncSince(userId, token, cursor);
+    }
+
+    const assignments: RawLmsAssignment[] = [];
+    for (const feedUrl of feedUrls) {
+      const response = await fetch(feedUrl, { cache: "no-store" });
+      if (!response.ok) {
+        continue;
+      }
+      const ics = await response.text();
+      assignments.push(...parseIcsAssignments(ics, feedUrl, "Max"));
+    }
+
+    const deduped = Array.from(new Map(assignments.map((a) => [a.id, a])).values());
+    const nextCursor = new Date().toISOString();
+    return {
+      assignments: deduped,
+      nextCursor,
+      checksum: `MAX-${deduped.length}-${nextCursor}`
+    };
+  }
+
   normalize(raw: RawLmsAssignment, userId: string): NormalizedAssignment {
     return normalizeGeneric(this.provider, raw, userId);
   }
@@ -348,11 +398,11 @@ function parseLearningSuiteTokenPackage(token: string): string[] {
   }
 }
 
-function parseIcsAssignments(ics: string, feedUrl: string): RawLmsAssignment[] {
+function parseIcsAssignments(ics: string, feedUrl: string, fallbackName = "Learning Suite"): RawLmsAssignment[] {
   const unfolded = ics.replace(/\r\n[ \t]/g, "").replace(/\r/g, "");
-  const calendarName = unfolded.match(/X-WR-CALNAME:(.+)/)?.[1]?.trim() ?? "Learning Suite";
+  const calendarName = unfolded.match(/X-WR-CALNAME:(.+)/)?.[1]?.trim() ?? fallbackName;
   const eventBlocks = unfolded.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g) ?? [];
-  const courseId = stableHash(`ls-course-${feedUrl}`).slice(0, 16);
+  const courseId = stableHash(`cal-course-${feedUrl}`).slice(0, 16);
 
   return eventBlocks.flatMap((block) => {
       const uid = extractIcsField(block, "UID") ?? stableHash(block);
@@ -368,7 +418,7 @@ function parseIcsAssignments(ics: string, feedUrl: string): RawLmsAssignment[] {
 
       const title = summary.replace(/\s+/g, " ").trim();
       return [{
-        id: `LS-${uid}`,
+        id: `CAL-${uid}`,
         courseId,
         courseName: calendarName,
         title,

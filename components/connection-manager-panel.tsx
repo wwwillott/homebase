@@ -9,6 +9,8 @@ export type ManagedClass = {
   lms: LmsProvider;
   learningSuiteFeedUrl?: string;
   learningSuiteConnected?: boolean;
+  maxFeedUrl?: string;
+  maxConnected?: boolean;
 };
 
 interface Props {
@@ -43,6 +45,10 @@ export function ConnectionManagerPanel({
 
   const learningSuiteClasses = useMemo(
     () => classes.filter((item) => item.lms === "LEARNING_SUITE"),
+    [classes]
+  );
+  const maxClasses = useMemo(
+    () => classes.filter((item) => item.lms === "MAX"),
     [classes]
   );
 
@@ -97,6 +103,42 @@ export function ConnectionManagerPanel({
         )
       );
       setStatus("Learning Suite connected for classes with feed links.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function connectMax() {
+    setBusy(true);
+    setStatus("Connecting Max...");
+    try {
+      const feedUrls = maxClasses
+        .map((item) => item.maxFeedUrl?.trim())
+        .filter((value): value is string => Boolean(value));
+      if (feedUrls.length === 0) {
+        setStatus("Add at least one Max feed URL.");
+        return;
+      }
+
+      const response = await fetch("/api/connectors/MAX/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: feedUrls.join("\n") })
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        setStatus(`Max connection failed: ${payload.error ?? "unknown error"}`);
+        return;
+      }
+
+      onClassesChange(
+        classes.map((item) =>
+          item.lms === "MAX" && item.maxFeedUrl?.trim()
+            ? { ...item, maxConnected: true }
+            : item
+        )
+      );
+      setStatus("Max connected for classes with feed links.");
     } finally {
       setBusy(false);
     }
@@ -182,6 +224,20 @@ export function ConnectionManagerPanel({
                   }
                 />
               ) : null}
+              {item.lms === "MAX" ? (
+                <input
+                  type="text"
+                  value={item.maxFeedUrl ?? ""}
+                  placeholder="Max connection string / feed URL"
+                  onChange={(event) =>
+                    onClassesChange(
+                      classes.map((row) =>
+                        row.id === item.id ? { ...row, maxFeedUrl: event.currentTarget.value } : row
+                      )
+                    )
+                  }
+                />
+              ) : null}
               <button
                 type="button"
                 onClick={() => onClassesChange(classes.filter((row) => row.id !== item.id))}
@@ -229,6 +285,17 @@ export function ConnectionManagerPanel({
           </p>
           <button type="button" onClick={connectLearningSuite} disabled={busy}>
             Connect Learning Suite Feeds
+          </button>
+        </div>
+
+        <div style={{ display: "grid", gap: "0.7rem", marginTop: "1rem" }}>
+          <strong>Max Connection</strong>
+          <p className="muted">
+            Provide Max connection strings/feed links if required by your class. If the Max schedule
+            changes, refresh the link here.
+          </p>
+          <button type="button" onClick={connectMax} disabled={busy}>
+            Connect Max Feeds
           </button>
         </div>
 

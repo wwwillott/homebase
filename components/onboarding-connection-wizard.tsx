@@ -11,6 +11,8 @@ type CourseRow = {
 };
 
 interface Props {
+  open: boolean;
+  onClose?: () => void;
   onDone: () => Promise<void>;
   onCaptureClasses?: (classes: ManagedClass[]) => void;
 }
@@ -26,12 +28,13 @@ function createCourse(defaultPlatform: LmsProvider = "CANVAS"): CourseRow {
   };
 }
 
-export function OnboardingConnectionWizard({ onDone, onCaptureClasses }: Props) {
+export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureClasses }: Props) {
   const [step, setStep] = useState(1);
   const [courses, setCourses] = useState<CourseRow[]>([createCourse()]);
   const [canvasToken, setCanvasToken] = useState("");
   const [canvasBaseUrl, setCanvasBaseUrl] = useState("https://byu.instructure.com");
   const [learningSuiteFeeds, setLearningSuiteFeeds] = useState<Record<string, string>>({});
+  const [maxFeeds, setMaxFeeds] = useState<Record<string, string>>({});
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -54,6 +57,26 @@ export function OnboardingConnectionWizard({ onDone, onCaptureClasses }: Props) 
     () => safeCourses.filter((course) => course.platform === "LEARNING_SUITE" && course.name.trim()),
     [safeCourses]
   );
+  const maxCourses = useMemo(
+    () => safeCourses.filter((course) => course.platform === "MAX" && course.name.trim()),
+    [safeCourses]
+  );
+
+  function captureClasses() {
+    onCaptureClasses?.(
+      safeCourses
+        .filter((course) => course.name.trim())
+        .map((course) => ({
+          id: course.id,
+          name: course.name.trim(),
+          lms: course.platform,
+          learningSuiteFeedUrl: learningSuiteFeeds[course.id] ?? "",
+          maxFeedUrl: maxFeeds[course.id] ?? "",
+          learningSuiteConnected: Boolean(learningSuiteFeeds[course.id]?.trim()),
+          maxConnected: Boolean(maxFeeds[course.id]?.trim())
+        }))
+    );
+  }
 
   async function connectCanvasToken() {
     setBusy(true);
@@ -108,6 +131,36 @@ export function OnboardingConnectionWizard({ onDone, onCaptureClasses }: Props) 
     }
   }
 
+  async function connectMax() {
+    setBusy(true);
+    setStatus("Connecting Max...");
+    try {
+      const feeds = maxCourses
+        .map((course) => maxFeeds[course.id]?.trim())
+        .filter(Boolean)
+        .join("\n");
+
+      if (!feeds) {
+        setStatus("Add at least one Max connection string/feed URL.");
+        return;
+      }
+
+      const response = await fetch("/api/connectors/MAX/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: feeds })
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        setStatus(`Max connection failed: ${payload.error ?? "unknown error"}`);
+        return;
+      }
+      setStatus("Max connected.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function finish() {
     setBusy(true);
     setStatus("Running first sync...");
@@ -120,9 +173,27 @@ export function OnboardingConnectionWizard({ onDone, onCaptureClasses }: Props) 
     }
   }
 
+  if (!open) {
+    return null;
+  }
+
   return (
-    <section className="card" style={{ marginBottom: "1rem", display: "grid", gap: "0.8rem" }}>
-      <h2>Get Started</h2>
+    <>
+      <button
+        type="button"
+        className="wizard-overlay"
+        onClick={onClose}
+        aria-label="Close setup wizard"
+      />
+      <section className="wizard-modal">
+        <div className="settings-header">
+          <h2>Get Started</h2>
+          {onClose ? (
+            <button type="button" onClick={onClose} aria-label="Close setup wizard">
+              Close
+            </button>
+          ) : null}
+        </div>
       {step === 1 ? (
         <>
           <p className="muted">
@@ -190,16 +261,7 @@ export function OnboardingConnectionWizard({ onDone, onCaptureClasses }: Props) 
             <button
               type="button"
               onClick={() => {
-                onCaptureClasses?.(
-                  safeCourses
-                    .filter((course) => course.name.trim())
-                    .map((course) => ({
-                      id: course.id,
-                      name: course.name.trim(),
-                      lms: course.platform,
-                      learningSuiteFeedUrl: learningSuiteFeeds[course.id] ?? ""
-                    }))
-                );
+                captureClasses();
                 setStep(hasCanvasCourses ? 2 : learningSuiteCourses.length > 0 ? 3 : 4);
               }}
             >
@@ -231,7 +293,13 @@ export function OnboardingConnectionWizard({ onDone, onCaptureClasses }: Props) 
             <a href={`/api/connectors/canvas/oauth/start?baseUrl=${encodeURIComponent(canvasBaseUrl)}`}>
               Connect with Canvas OAuth
             </a>
-            <button type="button" onClick={() => setStep(learningSuiteCourses.length ? 3 : 4)}>
+            <button
+              type="button"
+              onClick={() => {
+                captureClasses();
+                setStep(learningSuiteCourses.length ? 3 : maxCourses.length ? 4 : 5);
+              }}
+            >
               Continue
             </button>
           </div>
@@ -264,7 +332,13 @@ export function OnboardingConnectionWizard({ onDone, onCaptureClasses }: Props) 
             <button type="button" onClick={connectLearningSuite} disabled={busy}>
               Connect Learning Suite Feeds
             </button>
-            <button type="button" onClick={() => setStep(4)}>
+            <button
+              type="button"
+              onClick={() => {
+                captureClasses();
+                setStep(maxCourses.length ? 4 : 5);
+              }}
+            >
               Continue
             </button>
           </div>
@@ -272,6 +346,44 @@ export function OnboardingConnectionWizard({ onDone, onCaptureClasses }: Props) 
       ) : null}
 
       {step === 4 ? (
+        <>
+          <p className="muted">
+            Add Max connection strings/feed links for classes marked as Max (if required).
+          </p>
+          {maxCourses.map((course) => (
+            <div key={course.id} style={{ display: "grid", gap: "0.4rem" }}>
+              <strong>{course.name}</strong>
+              <input
+                type="text"
+                value={maxFeeds[course.id] ?? ""}
+                onChange={(event) =>
+                  setMaxFeeds((current) => ({
+                    ...current,
+                    [course.id]: event.currentTarget.value
+                  }))
+                }
+                placeholder="Max connection string / feed URL"
+              />
+            </div>
+          ))}
+          <div className="row">
+            <button type="button" onClick={connectMax} disabled={busy}>
+              Connect Max Feeds
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                captureClasses();
+                setStep(5);
+              }}
+            >
+              Continue
+            </button>
+          </div>
+        </>
+      ) : null}
+
+      {step === 5 ? (
         <>
           <p className="muted">Finish setup and run your first sync.</p>
           <button type="button" onClick={finish} disabled={busy}>
@@ -281,6 +393,7 @@ export function OnboardingConnectionWizard({ onDone, onCaptureClasses }: Props) 
       ) : null}
 
       {status ? <small>{status}</small> : null}
-    </section>
+      </section>
+    </>
   );
 }

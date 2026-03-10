@@ -72,6 +72,15 @@ export function SettingsSidebar({
                     LS
                   </span>
                 ) : null}
+                {item.lms === "MAX" && item.maxConnected ? (
+                  <span
+                    className="max-connected-icon"
+                    title="max has been connected for this class"
+                    aria-label="max has been connected for this class"
+                  >
+                    MAX
+                  </span>
+                ) : null}
               </div>
               <small className="muted">Platform: {LMS_PROVIDERS.find((p) => p.id === item.lms)?.label ?? item.lms}</small>
             </div>
