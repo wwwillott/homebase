@@ -209,7 +209,9 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
                   onChange={(event) =>
                     setCourses((current) =>
                       current.map((row) =>
-                        row.id === course.id ? { ...row, name: event.currentTarget.value } : row
+                        row.id === course.id
+                          ? { ...row, name: event.currentTarget?.value ?? "" }
+                          : row
                       )
                     )
                   }
@@ -318,7 +320,7 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
                 onChange={(event) =>
                   setLearningSuiteFeeds((current) => ({
                     ...current,
-                    [course.id]: event.currentTarget.value
+                    [course.id]: event.currentTarget?.value ?? ""
                   }))
                 }
                 placeholder="Learning Suite iCal feed URL"
@@ -359,7 +361,7 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
                 onChange={(event) =>
                   setMaxFeeds((current) => ({
                     ...current,
-                    [course.id]: event.currentTarget.value
+                    [course.id]: event.currentTarget?.value ?? ""
                   }))
                 }
                 placeholder="Max connection string / feed URL"
