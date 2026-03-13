@@ -179,12 +179,7 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
 
   return (
     <>
-      <button
-        type="button"
-        className="wizard-overlay"
-        onClick={onClose}
-        aria-label="Close setup wizard"
-      />
+      <div className="wizard-overlay" onClick={onClose} aria-hidden="true" />
       <section className="wizard-modal">
         <div className="settings-header">
           <h2>Get Started</h2>
@@ -210,7 +205,10 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
                     setCourses((current) =>
                       current.map((row) =>
                         row.id === course.id
-                          ? { ...row, name: event.currentTarget?.value ?? "" }
+                          ? {
+                              ...row,
+                              name: (event.target as HTMLInputElement).value ?? ""
+                            }
                           : row
                       )
                     )
@@ -279,13 +277,13 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
           <input
             type="text"
             value={canvasToken}
-            onChange={(event) => setCanvasToken(event.currentTarget.value)}
+            onChange={(event) => setCanvasToken((event.target as HTMLInputElement).value)}
             placeholder="Canvas API token"
           />
           <input
             type="text"
             value={canvasBaseUrl}
-            onChange={(event) => setCanvasBaseUrl(event.currentTarget.value)}
+            onChange={(event) => setCanvasBaseUrl((event.target as HTMLInputElement).value)}
             placeholder="Canvas base URL (e.g. https://byu.instructure.com)"
           />
           <div className="row">
@@ -320,7 +318,7 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
                 onChange={(event) =>
                   setLearningSuiteFeeds((current) => ({
                     ...current,
-                    [course.id]: event.currentTarget?.value ?? ""
+                    [course.id]: (event.target as HTMLInputElement).value ?? ""
                   }))
                 }
                 placeholder="Learning Suite iCal feed URL"
@@ -361,7 +359,7 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
                 onChange={(event) =>
                   setMaxFeeds((current) => ({
                     ...current,
-                    [course.id]: event.currentTarget?.value ?? ""
+                    [course.id]: (event.target as HTMLInputElement).value ?? ""
                   }))
                 }
                 placeholder="Max connection string / feed URL"
