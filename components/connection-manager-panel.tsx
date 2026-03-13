@@ -44,6 +44,7 @@ export function ConnectionManagerPanel({
   const [canvasBaseUrl, setCanvasBaseUrl] = useState("https://byu.instructure.com");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [activeUpdate, setActiveUpdate] = useState<string | null>(null);
 
   const learningSuiteClasses = useMemo(
     () => classes.filter((item) => item.lms === "LEARNING_SUITE"),
@@ -76,6 +77,7 @@ export function ConnectionManagerPanel({
 
   async function connectLearningSuite() {
     setBusy(true);
+    setActiveUpdate("LEARNING_SUITE");
     setStatus("Connecting Learning Suite...");
     try {
       const feedUrls = learningSuiteClasses
@@ -110,11 +112,13 @@ export function ConnectionManagerPanel({
       setStatus("Learning Suite connected for classes with feed links.");
     } finally {
       setBusy(false);
+      setActiveUpdate(null);
     }
   }
 
   async function connectMax() {
     setBusy(true);
+    setActiveUpdate("MAX");
     setStatus("Connecting Max...");
     try {
       const feedUrls = maxClasses
@@ -149,6 +153,7 @@ export function ConnectionManagerPanel({
       setStatus("Max connected for classes with feed links.");
     } finally {
       setBusy(false);
+      setActiveUpdate(null);
     }
   }
 
@@ -242,6 +247,13 @@ export function ConnectionManagerPanel({
                   ) : (
                     <span className="status-pill warn">Needs connect</span>
                   )}
+                  <button
+                    type="button"
+                    onClick={connectLearningSuite}
+                    disabled={busy || !item.learningSuiteFeedUrl?.trim()}
+                  >
+                    {item.learningSuiteConnected ? "Update feed" : "Connect feed"}
+                  </button>
                 </div>
               ) : null}
               {item.lms === "MAX" ? (
@@ -265,6 +277,13 @@ export function ConnectionManagerPanel({
                   ) : (
                     <span className="status-pill warn">Needs connect</span>
                   )}
+                  <button
+                    type="button"
+                    onClick={connectMax}
+                    disabled={busy || !item.maxFeedUrl?.trim()}
+                  >
+                    {item.maxConnected ? "Update feed" : "Connect feed"}
+                  </button>
                 </div>
               ) : null}
               <button
@@ -316,7 +335,7 @@ export function ConnectionManagerPanel({
             link periodically.
           </p>
           <button type="button" onClick={connectLearningSuite} disabled={busy}>
-            Connect Learning Suite Feeds
+            {activeUpdate === "LEARNING_SUITE" ? "Updating feeds..." : "Connect Learning Suite Feeds"}
           </button>
         </div>
 
@@ -327,7 +346,7 @@ export function ConnectionManagerPanel({
             changes, refresh the link here.
           </p>
           <button type="button" onClick={connectMax} disabled={busy}>
-            Connect Max Feeds
+            {activeUpdate === "MAX" ? "Updating feeds..." : "Connect Max Feeds"}
           </button>
         </div>
 

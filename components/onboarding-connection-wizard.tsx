@@ -187,12 +187,26 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
 
   return (
     <>
-      <div className="wizard-overlay" onClick={onClose} aria-hidden="true" />
+      <div
+        className="wizard-overlay"
+        onClick={() => {
+          captureClasses();
+          onClose?.();
+        }}
+        aria-hidden="true"
+      />
       <section className="wizard-modal" role="dialog" aria-modal="true" aria-labelledby="wizard-title">
         <div className="settings-header">
           <h2 id="wizard-title">Get Started</h2>
           {onClose ? (
-            <button type="button" onClick={onClose} aria-label="Close setup wizard">
+            <button
+              type="button"
+              onClick={() => {
+                captureClasses();
+                onClose();
+              }}
+              aria-label="Close setup wizard"
+            >
               Close
             </button>
           ) : null}
