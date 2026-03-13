@@ -19,6 +19,7 @@ interface Props {
   classes: ManagedClass[];
   onClassesChange: (next: ManagedClass[]) => void;
   onSyncComplete: () => Promise<void>;
+  onOpenSetupWizard: () => void;
 }
 
 const LMS_OPTIONS: LmsProvider[] = ["CANVAS", "LEARNING_SUITE", "GRADESCOPE", "MAX"];
@@ -36,7 +37,8 @@ export function ConnectionManagerPanel({
   onClose,
   classes,
   onClassesChange,
-  onSyncComplete
+  onSyncComplete,
+  onOpenSetupWizard
 }: Props) {
   const [canvasToken, setCanvasToken] = useState("");
   const [canvasBaseUrl, setCanvasBaseUrl] = useState("https://byu.instructure.com");
@@ -249,6 +251,9 @@ export function ConnectionManagerPanel({
           ))}
           <button type="button" onClick={() => onClassesChange([...classes, createClass()])}>
             Add Class
+          </button>
+          <button type="button" onClick={onOpenSetupWizard}>
+            Open Setup Wizard
           </button>
         </div>
 

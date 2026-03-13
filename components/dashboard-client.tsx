@@ -89,7 +89,6 @@ export function DashboardClient() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [connectionManagerOpen, setConnectionManagerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [hasConnections, setHasConnections] = useState<boolean | null>(null);
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [managedClasses, setManagedClasses] = useState<ManagedClass[]>([]);
 
@@ -120,14 +119,15 @@ export function DashboardClient() {
     async function loadConnectorStatus() {
       const response = await fetch("/api/connectors/status");
       if (!response.ok) {
-        setHasConnections(true);
         return;
       }
       const payload = (await response.json()) as { hasConnections?: boolean };
-      setHasConnections(Boolean(payload.hasConnections));
+      if (!payload.hasConnections) {
+        setShowSetupWizard(true);
+      }
     }
 
-    loadConnectorStatus().catch(() => setHasConnections(true));
+    loadConnectorStatus().catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -226,10 +226,6 @@ export function DashboardClient() {
         themes={THEMES}
         value={theme}
         onChange={setTheme}
-        onRunSetupWizard={() => {
-          setShowSetupWizard(true);
-          setSettingsOpen(false);
-        }}
         classes={managedClasses}
         onOpenConnectionManager={() => {
           setSettingsOpen(false);
@@ -243,17 +239,20 @@ export function DashboardClient() {
         classes={managedClasses}
         onClassesChange={setManagedClasses}
         onSyncComplete={loadAssignments}
+        onOpenSetupWizard={() => {
+          setConnectionManagerOpen(false);
+          setShowSetupWizard(true);
+        }}
       />
       <header style={{ marginBottom: "1.3rem", display: "grid", gap: "0.6rem" }}>
         <h1>HomeBase</h1>
         <p className="muted">Unified assignments from Learning Suite, Canvas, Gradescope, and Max.</p>
         <OnboardingConnectionWizard
-          open={hasConnections === false || showSetupWizard}
+          open={showSetupWizard}
           onClose={() => setShowSetupWizard(false)}
           onCaptureClasses={(captured) => setManagedClasses(captured)}
           onDone={async () => {
             await loadAssignments();
-            setHasConnections(true);
             setShowSetupWizard(false);
           }}
         />

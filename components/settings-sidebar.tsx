@@ -19,7 +19,6 @@ interface Props {
   value: ThemeId;
   onChange: (theme: ThemeId) => void;
   onSignOut: () => void;
-  onRunSetupWizard: () => void;
   classes: ManagedClass[];
   onOpenConnectionManager: () => void;
 }
@@ -38,7 +37,6 @@ export function SettingsSidebar({
   value,
   onChange,
   onSignOut,
-  onRunSetupWizard,
   classes,
   onOpenConnectionManager
 }: Props) {
@@ -91,9 +89,6 @@ export function SettingsSidebar({
         </div>
 
         <div style={{ display: "grid", gap: "0.6rem", marginTop: "1rem" }}>
-          <button type="button" onClick={onRunSetupWizard}>
-            Run setup wizard again
-          </button>
           <button type="button" onClick={onSignOut}>
             Sign out
           </button>
