@@ -321,9 +321,17 @@ export function DashboardClient() {
           <CalendarView
             items={sortedItems}
             mode={calendarMode}
-            anchorDate={calendarDate}
             onModeChange={setCalendarMode}
-            onAnchorDateChange={setCalendarDate}
+            onShift={(direction) => {
+              const anchor = dayjs(calendarDate);
+              const next =
+                calendarMode === "day"
+                  ? anchor.add(direction, "day")
+                  : calendarMode === "week"
+                  ? anchor.add(direction, "week")
+                  : anchor.add(direction, "month");
+              setCalendarDate(next.format("YYYY-MM-DD"));
+            }}
           />
         ) : view === "list" ? (
           <AssignmentList items={sortedItems} onToggled={loadAssignments} />

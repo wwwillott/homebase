@@ -6,9 +6,8 @@ import { AggregatedAssignment } from "@/types/lms";
 interface Props {
   items: AggregatedAssignment[];
   mode: "day" | "week" | "month";
-  anchorDate: string;
   onModeChange: (nextMode: "day" | "week" | "month") => void;
-  onAnchorDateChange: (nextDate: string) => void;
+  onShift: (direction: -1 | 1) => void;
 }
 
 function truncateTitle(title: string) {
@@ -22,11 +21,10 @@ function truncateTitle(title: string) {
 export function CalendarView({
   items,
   mode,
-  anchorDate,
   onModeChange,
-  onAnchorDateChange
+  onShift
 }: Props) {
-  const anchor = dayjs(anchorDate);
+  const anchor = dayjs();
   const rangeStart =
     mode === "day" ? anchor.startOf("day") : mode === "week" ? anchor.startOf("week") : anchor.startOf("month").startOf("week");
   const rangeEnd =
@@ -68,14 +66,14 @@ export function CalendarView({
               {option[0].toUpperCase() + option.slice(1)}
             </button>
           ))}
-          <label className="row">
-            <span>Date</span>
-            <input
-              type="date"
-              value={anchorDate}
-              onChange={(event) => onAnchorDateChange(event.target.value)}
-            />
-          </label>
+          <div className="row">
+            <button type="button" onClick={() => onShift(-1)}>
+              Prev
+            </button>
+            <button type="button" onClick={() => onShift(1)}>
+              Next
+            </button>
+          </div>
         </div>
         <button type="button" onClick={() => window.print()}>
           Print
@@ -83,11 +81,13 @@ export function CalendarView({
       </div>
 
       <div className="calendar-grid">
-        {weekdayLabels.map((label) => (
-          <div key={label} className="calendar-header">
-            {label}
-          </div>
-        ))}
+        <div className="calendar-header-row">
+          {weekdayLabels.map((label) => (
+            <div key={label} className="calendar-header">
+              {label}
+            </div>
+          ))}
+        </div>
         {weeks.map((week, idx) => (
           <div key={`week-${idx}`} className="calendar-week">
             {week.map((day) => {
