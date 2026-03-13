@@ -5,9 +5,10 @@ import { AggregatedAssignment } from "@/types/lms";
 
 interface Props {
   items: AggregatedAssignment[];
-  rangeStart: string;
-  rangeEnd: string;
-  onRangeChange: (nextStart: string, nextEnd: string) => void;
+  mode: "day" | "week" | "month";
+  anchorDate: string;
+  onModeChange: (nextMode: "day" | "week" | "month") => void;
+  onAnchorDateChange: (nextDate: string) => void;
 }
 
 function truncateTitle(title: string) {
@@ -18,13 +19,22 @@ function truncateTitle(title: string) {
   return parts.slice(0, 4).join(" ");
 }
 
-export function CalendarView({ items, rangeStart, rangeEnd, onRangeChange }: Props) {
-  const start = dayjs(rangeStart);
-  const end = dayjs(rangeEnd);
+export function CalendarView({
+  items,
+  mode,
+  anchorDate,
+  onModeChange,
+  onAnchorDateChange
+}: Props) {
+  const anchor = dayjs(anchorDate);
+  const rangeStart =
+    mode === "day" ? anchor.startOf("day") : mode === "week" ? anchor.startOf("week") : anchor.startOf("month").startOf("week");
+  const rangeEnd =
+    mode === "day" ? anchor.endOf("day") : mode === "week" ? anchor.endOf("week") : anchor.endOf("month").endOf("week");
 
   const days: dayjs.Dayjs[] = [];
-  let cursor = start;
-  while (cursor.isBefore(end) || cursor.isSame(end, "day")) {
+  let cursor = rangeStart;
+  while (cursor.isBefore(rangeEnd) || cursor.isSame(rangeEnd, "day")) {
     days.push(cursor);
     cursor = cursor.add(1, "day");
   }
@@ -42,27 +52,28 @@ export function CalendarView({ items, rangeStart, rangeEnd, onRangeChange }: Pro
     assignmentsByDay.set(key, existing);
   }
 
-  const weekdayLabels =
-    weeks[0]?.map((day) => day.format("ddd")) ?? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
     <div className="card">
       <div className="row" style={{ justifyContent: "space-between", marginBottom: "0.8rem" }}>
         <div className="row">
+          {(["day", "week", "month"] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              style={{ borderColor: mode === option ? "#1d4ed8" : undefined }}
+              onClick={() => onModeChange(option)}
+            >
+              {option[0].toUpperCase() + option.slice(1)}
+            </button>
+          ))}
           <label className="row">
-            <span>Start</span>
+            <span>Date</span>
             <input
               type="date"
-              value={rangeStart}
-              onChange={(event) => onRangeChange(event.target.value, rangeEnd)}
-            />
-          </label>
-          <label className="row">
-            <span>End</span>
-            <input
-              type="date"
-              value={rangeEnd}
-              onChange={(event) => onRangeChange(rangeStart, event.target.value)}
+              value={anchorDate}
+              onChange={(event) => onAnchorDateChange(event.target.value)}
             />
           </label>
         </div>
@@ -82,8 +93,14 @@ export function CalendarView({ items, rangeStart, rangeEnd, onRangeChange }: Pro
             {week.map((day) => {
               const key = day.format("YYYY-MM-DD");
               const dayItems = assignmentsByDay.get(key) ?? [];
+              const inRange =
+                mode === "day"
+                  ? day.isSame(anchor, "day")
+                  : mode === "week"
+                  ? day.isSame(anchor, "week")
+                  : day.isSame(anchor, "month");
               return (
-                <div key={key} className="calendar-day">
+                <div key={key} className={`calendar-day${inRange ? "" : " is-muted"}`}>
                   <div className="calendar-date">{day.format("MMM D")}</div>
                   <ul className="calendar-list">
                     {dayItems.map((item) => (

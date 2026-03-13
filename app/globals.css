@@ -361,6 +361,10 @@ main {
   background: var(--list-item-bg);
 }
 
+.calendar-day.is-muted {
+  opacity: 0.5;
+}
+
 .calendar-date {
   font-weight: 600;
   font-size: 0.85rem;

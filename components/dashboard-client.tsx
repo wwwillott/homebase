@@ -2,6 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
+import dayjs from "dayjs";
 import { AssignmentList } from "@/components/assignment-list";
 import { CalendarView } from "@/components/calendar-view";
 import {
@@ -87,14 +88,8 @@ export function DashboardClient() {
   const [assignmentType, setAssignmentType] = useState<string>("all");
   const [completion, setCompletion] = useState<"all" | "incomplete" | "complete">("all");
   const [theme, setTheme] = useState<ThemeId>("terminal-study");
-  const [calendarStart, setCalendarStart] = useState(() =>
-    new Date().toISOString().slice(0, 10)
-  );
-  const [calendarEnd, setCalendarEnd] = useState(() => {
-    const end = new Date();
-    end.setDate(end.getDate() + 6);
-    return end.toISOString().slice(0, 10);
-  });
+  const [calendarMode, setCalendarMode] = useState<"day" | "week" | "month">("week");
+  const [calendarDate, setCalendarDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [connectionManagerOpen, setConnectionManagerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -107,8 +102,21 @@ export function DashboardClient() {
     if (classId !== "all") params.set("classId", classId);
     if (assignmentType !== "all") params.set("assignmentType", assignmentType);
     if (view === "calendar") {
-      params.set("start", calendarStart);
-      params.set("end", calendarEnd);
+      const anchor = dayjs(calendarDate);
+      const start =
+        calendarMode === "day"
+          ? anchor.startOf("day")
+          : calendarMode === "week"
+          ? anchor.startOf("week")
+          : anchor.startOf("month").startOf("week");
+      const end =
+        calendarMode === "day"
+          ? anchor.endOf("day")
+          : calendarMode === "week"
+          ? anchor.endOf("week")
+          : anchor.endOf("month").endOf("week");
+      params.set("start", start.toISOString());
+      params.set("end", end.toISOString());
     }
 
     const response = await fetch(`/api/assignments?${params.toString()}`);
@@ -126,7 +134,7 @@ export function DashboardClient() {
 
   useEffect(() => {
     loadAssignments().catch(() => setLoading(false));
-  }, [view, classId, assignmentType, completion, calendarStart, calendarEnd]);
+  }, [view, classId, assignmentType, completion, calendarMode, calendarDate]);
 
   useEffect(() => {
     async function loadConnectorStatus() {
@@ -312,12 +320,10 @@ export function DashboardClient() {
         {view === "calendar" ? (
           <CalendarView
             items={sortedItems}
-            rangeStart={calendarStart}
-            rangeEnd={calendarEnd}
-            onRangeChange={(nextStart, nextEnd) => {
-              setCalendarStart(nextStart);
-              setCalendarEnd(nextEnd);
-            }}
+            mode={calendarMode}
+            anchorDate={calendarDate}
+            onModeChange={setCalendarMode}
+            onAnchorDateChange={setCalendarDate}
           />
         ) : view === "list" ? (
           <AssignmentList items={sortedItems} onToggled={loadAssignments} />
