@@ -15,6 +15,7 @@ export interface ThemeOption {
   headingFont: string;
   bodyFont: string;
   swatches: [string, string, string];
+  palette: string[];
 }
 
 interface Props {

@@ -18,6 +18,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   classes: ManagedClass[];
+  palette: string[];
   onClassesChange: (next: ManagedClass[]) => void;
   onSyncComplete: () => Promise<void>;
   onOpenSetupWizard: () => void;
@@ -38,6 +39,7 @@ export function ConnectionManagerPanel({
   open,
   onClose,
   classes,
+  palette,
   onClassesChange,
   onSyncComplete,
   onOpenSetupWizard
@@ -254,7 +256,11 @@ export function ConnectionManagerPanel({
                 <span className="muted">Color</span>
                 <input
                   type="color"
-                  value={item.color ?? "#dbeafe"}
+                  value={
+                    item.color ??
+                    palette[classes.findIndex((row) => row.id === item.id) % Math.max(palette.length, 1)] ??
+                    "#dbeafe"
+                  }
                   onChange={(event) =>
                     onClassesChange(
                       classes.map((row) =>

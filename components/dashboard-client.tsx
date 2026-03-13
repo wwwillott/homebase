@@ -35,7 +35,8 @@ const THEMES: ThemeOption[] = [
     mood: "Focused academic planner",
     headingFont: "Fraunces",
     bodyFont: "Source Sans 3",
-    swatches: ["#f6f1e9", "#1f2937", "#1f4c4d"]
+    swatches: ["#f6f1e9", "#1f2937", "#1f4c4d"],
+    palette: ["#1f4c4d", "#2a5d67", "#6c4f2a", "#8b3d2e", "#4b5563", "#c19a6b"]
   },
   {
     id: "terminal-study",
@@ -43,7 +44,8 @@ const THEMES: ThemeOption[] = [
     mood: "Dense command-center feel",
     headingFont: "Space Grotesk",
     bodyFont: "IBM Plex Mono",
-    swatches: ["#0b1114", "#d9ffe8", "#4affc3"]
+    swatches: ["#0b1114", "#d9ffe8", "#4affc3"],
+    palette: ["#4affc3", "#2cd3a7", "#76f7d6", "#1fbda0", "#9fffe7", "#35f0b8"]
   },
   {
     id: "sunrise-calendar",
@@ -51,7 +53,8 @@ const THEMES: ThemeOption[] = [
     mood: "Warm, optimistic planning",
     headingFont: "Sora",
     bodyFont: "Manrope",
-    swatches: ["#fff5eb", "#1f2a44", "#ff7a2f"]
+    swatches: ["#fff5eb", "#1f2a44", "#ff7a2f"],
+    palette: ["#ff7a2f", "#ff9b5a", "#fcbf49", "#f4a261", "#e76f51", "#f6d365"]
   },
   {
     id: "studio-minimal",
@@ -59,7 +62,8 @@ const THEMES: ThemeOption[] = [
     mood: "Editorial and quiet",
     headingFont: "DM Serif Display",
     bodyFont: "Work Sans",
-    swatches: ["#f8f8f6", "#111111", "#0b7f7a"]
+    swatches: ["#f8f8f6", "#111111", "#0b7f7a"],
+    palette: ["#0b7f7a", "#2b9a94", "#6b7280", "#1f2937", "#8b5e3c", "#c0a27a"]
   },
   {
     id: "midnight-focus",
@@ -67,7 +71,8 @@ const THEMES: ThemeOption[] = [
     mood: "Calm deep-work mode",
     headingFont: "Outfit",
     bodyFont: "Inter Tight",
-    swatches: ["#0f172e", "#e6eefc", "#6ef0c2"]
+    swatches: ["#0f172e", "#e6eefc", "#6ef0c2"],
+    palette: ["#6ef0c2", "#4fd1c5", "#60a5fa", "#38bdf8", "#a78bfa", "#93c5fd"]
   },
   {
     id: "campus-retro",
@@ -75,7 +80,8 @@ const THEMES: ThemeOption[] = [
     mood: "Notebook + binder nostalgia",
     headingFont: "Bricolage Grotesque",
     bodyFont: "Merriweather Sans",
-    swatches: ["#f8edd9", "#2f2a24", "#2d5b93"]
+    swatches: ["#f8edd9", "#2f2a24", "#2d5b93"],
+    palette: ["#2d5b93", "#3f7db5", "#8c5b4c", "#c18f59", "#4d6a45", "#a16a3f"]
   }
 ];
 
@@ -190,16 +196,27 @@ export function DashboardClient() {
     localStorage.setItem(CLASS_MANAGER_STORAGE_KEY, JSON.stringify(managedClasses));
   }, [managedClasses]);
 
-  const itemsWithColors = useMemo(() => {
-    const normalizeName = (name: string) => name.trim().toLowerCase();
-    const colorByCourseName = new Map(
-      managedClasses
-        .filter((item) => item.name.trim() && item.color)
-        .map((item) => [normalizeName(item.name), item.color as string])
-    );
+  const themePalette = useMemo(
+    () => THEMES.find((themeOption) => themeOption.id === theme)?.palette ?? ["#dbeafe"],
+    [theme]
+  );
 
+  const classColorByName = useMemo(() => {
+    const normalizeName = (name: string) => name.trim().toLowerCase();
+    const map = new Map<string, string>();
+    managedClasses.forEach((item, index) => {
+      if (!item.name.trim()) {
+        return;
+      }
+      const fallback = themePalette[index % Math.max(themePalette.length, 1)] ?? "#dbeafe";
+      map.set(normalizeName(item.name), item.color ?? fallback);
+    });
+    return map;
+  }, [managedClasses, themePalette]);
+
+  const itemsWithColors = useMemo(() => {
     return items.map((item) => {
-      const color = colorByCourseName.get(normalizeName(item.mergedFields.courseName));
+      const color = classColorByName.get(item.mergedFields.courseName.trim().toLowerCase());
       if (!color || item.mergedFields.courseColor === color) {
         return item;
       }
@@ -211,7 +228,7 @@ export function DashboardClient() {
         }
       };
     });
-  }, [items, managedClasses]);
+  }, [items, classColorByName]);
 
   const sortedItems = useMemo(
     () =>
@@ -271,6 +288,7 @@ export function DashboardClient() {
         value={theme}
         onChange={setTheme}
         classes={managedClasses}
+        palette={themePalette}
         onOpenConnectionManager={() => {
           setSettingsOpen(false);
           setConnectionManagerOpen(true);
@@ -281,6 +299,7 @@ export function DashboardClient() {
         open={connectionManagerOpen}
         onClose={() => setConnectionManagerOpen(false)}
         classes={managedClasses}
+        palette={themePalette}
         onClassesChange={setManagedClasses}
         onSyncComplete={loadAssignments}
         onOpenSetupWizard={() => {

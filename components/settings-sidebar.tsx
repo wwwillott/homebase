@@ -20,6 +20,7 @@ interface Props {
   onChange: (theme: ThemeId) => void;
   onSignOut: () => void;
   classes: ManagedClass[];
+  palette: string[];
   onOpenConnectionManager: () => void;
 }
 
@@ -38,6 +39,7 @@ export function SettingsSidebar({
   onChange,
   onSignOut,
   classes,
+  palette,
   onOpenConnectionManager
 }: Props) {
   return (
@@ -68,7 +70,12 @@ export function SettingsSidebar({
                   <span className="row" style={{ gap: "0.5rem" }}>
                     <span
                       className="class-color-dot"
-                      style={{ background: item.color ?? "var(--line)" }}
+                      style={{
+                        background:
+                          item.color ??
+                          palette[classes.findIndex((row) => row.id === item.id) % Math.max(palette.length, 1)] ??
+                          "var(--line)"
+                      }}
                       aria-hidden="true"
                     />
                     {item.name || "Unnamed class"}
