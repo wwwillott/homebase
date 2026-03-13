@@ -348,9 +348,6 @@ export function ConnectionManagerPanel({
             <button type="button" onClick={connectCanvas} disabled={busy || !canvasToken.trim()}>
               Connect Canvas Token
             </button>
-            <a href={`/api/connectors/canvas/oauth/start?baseUrl=${encodeURIComponent(canvasBaseUrl)}`}>
-              Connect with Canvas OAuth
-            </a>
             <button type="button" onClick={importCanvasClasses} disabled={busy}>
               Import Canvas Classes
             </button>
