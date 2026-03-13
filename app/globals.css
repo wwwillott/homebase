@@ -134,6 +134,10 @@ main {
   padding: 2rem 1rem 3rem;
 }
 
+main.main-wide {
+  max-width: 100%;
+}
+
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -345,13 +349,9 @@ main {
 
 .calendar-fullbleed {
   width: 100%;
-  max-width: none;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-  border-radius: 0;
+  max-width: 100%;
+  margin: 0;
   box-sizing: border-box;
-  padding-left: max(1rem, env(safe-area-inset-left));
-  padding-right: max(1rem, env(safe-area-inset-right));
 }
 
 .calendar-header-row {

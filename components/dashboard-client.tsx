@@ -204,7 +204,7 @@ export function DashboardClient() {
   );
 
   return (
-    <main>
+    <main className={view === "calendar" ? "main-wide" : undefined}>
       <button
         type="button"
         className="settings-trigger"
