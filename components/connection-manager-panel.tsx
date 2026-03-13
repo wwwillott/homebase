@@ -99,8 +99,11 @@ export function ConnectionManagerPanel({
 
       onClassesChange(
         classes.map((item) =>
-          item.lms === "LEARNING_SUITE" && item.learningSuiteFeedUrl?.trim()
-            ? { ...item, learningSuiteConnected: true }
+          item.lms === "LEARNING_SUITE"
+            ? {
+                ...item,
+                learningSuiteConnected: Boolean(item.learningSuiteFeedUrl?.trim())
+              }
             : item
         )
       );
@@ -135,8 +138,11 @@ export function ConnectionManagerPanel({
 
       onClassesChange(
         classes.map((item) =>
-          item.lms === "MAX" && item.maxFeedUrl?.trim()
-            ? { ...item, maxConnected: true }
+          item.lms === "MAX"
+            ? {
+                ...item,
+                maxConnected: Boolean(item.maxFeedUrl?.trim())
+              }
             : item
         )
       );
@@ -211,34 +217,48 @@ export function ConnectionManagerPanel({
                 ))}
               </select>
               {item.lms === "LEARNING_SUITE" ? (
-                <input
-                  type="text"
-                  value={item.learningSuiteFeedUrl ?? ""}
-                  placeholder="Learning Suite iCal feed URL"
-                  onChange={(event) =>
-                    onClassesChange(
-                      classes.map((row) =>
-                        row.id === item.id
-                          ? { ...row, learningSuiteFeedUrl: event.currentTarget.value }
-                          : row
+                <div className="row" style={{ width: "100%" }}>
+                  <input
+                    type="text"
+                    value={item.learningSuiteFeedUrl ?? ""}
+                    placeholder="Learning Suite iCal feed URL"
+                    onChange={(event) =>
+                      onClassesChange(
+                        classes.map((row) =>
+                          row.id === item.id
+                            ? { ...row, learningSuiteFeedUrl: event.currentTarget.value }
+                            : row
+                        )
                       )
-                    )
-                  }
-                />
+                    }
+                  />
+                  {item.learningSuiteConnected ? (
+                    <span className="status-pill ok">Feed added</span>
+                  ) : (
+                    <span className="status-pill warn">Not connected</span>
+                  )}
+                </div>
               ) : null}
               {item.lms === "MAX" ? (
-                <input
-                  type="text"
-                  value={item.maxFeedUrl ?? ""}
-                  placeholder="Max connection string / feed URL"
-                  onChange={(event) =>
-                    onClassesChange(
-                      classes.map((row) =>
-                        row.id === item.id ? { ...row, maxFeedUrl: event.currentTarget.value } : row
+                <div className="row" style={{ width: "100%" }}>
+                  <input
+                    type="text"
+                    value={item.maxFeedUrl ?? ""}
+                    placeholder="Max connection string / feed URL"
+                    onChange={(event) =>
+                      onClassesChange(
+                        classes.map((row) =>
+                          row.id === item.id ? { ...row, maxFeedUrl: event.currentTarget.value } : row
+                        )
                       )
-                    )
-                  }
-                />
+                    }
+                  />
+                  {item.maxConnected ? (
+                    <span className="status-pill ok">Feed added</span>
+                  ) : (
+                    <span className="status-pill warn">Not connected</span>
+                  )}
+                </div>
               ) : null}
               <button
                 type="button"

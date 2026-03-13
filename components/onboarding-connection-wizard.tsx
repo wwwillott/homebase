@@ -125,7 +125,7 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
         setStatus(`Learning Suite connection failed: ${payload.error ?? "unknown error"}`);
         return;
       }
-      setStatus("Learning Suite connected.");
+      setStatus("Learning Suite feeds saved. Classes marked as connected.");
     } finally {
       setBusy(false);
     }
@@ -155,7 +155,7 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
         setStatus(`Max connection failed: ${payload.error ?? "unknown error"}`);
         return;
       }
-      setStatus("Max connected.");
+      setStatus("Max feeds saved. Classes marked as connected.");
     } finally {
       setBusy(false);
     }
