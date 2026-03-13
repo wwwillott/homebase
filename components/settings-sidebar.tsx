@@ -57,32 +57,40 @@ export function SettingsSidebar({
 
         <div style={{ display: "grid", gap: "0.6rem", marginTop: "1rem" }}>
           <strong>Class Manager</strong>
-          {classes.map((item) => (
-            <div key={item.id} className="connector-row">
-              <div className="row" style={{ justifyContent: "space-between" }}>
-                <span>{item.name || "Unnamed class"}</span>
-                {item.lms === "LEARNING_SUITE" && item.learningSuiteConnected ? (
-                  <span
-                    className="ls-connected-icon"
-                    title="learning suite has been connected for this class"
-                    aria-label="learning suite has been connected for this class"
-                  >
-                    LS
-                  </span>
-                ) : null}
-                {item.lms === "MAX" && item.maxConnected ? (
-                  <span
-                    className="max-connected-icon"
-                    title="max has been connected for this class"
-                    aria-label="max has been connected for this class"
-                  >
-                    MAX
-                  </span>
-                ) : null}
-              </div>
-              <small className="muted">Platform: {LMS_PROVIDERS.find((p) => p.id === item.lms)?.label ?? item.lms}</small>
+          {classes.length === 0 ? (
+            <div className="connector-row">
+              <small className="muted">No classes added yet.</small>
             </div>
-          ))}
+          ) : (
+            classes.map((item) => (
+              <div key={item.id} className="connector-row">
+                <div className="row" style={{ justifyContent: "space-between" }}>
+                  <span>{item.name || "Unnamed class"}</span>
+                  {item.lms === "LEARNING_SUITE" && item.learningSuiteConnected ? (
+                    <span
+                      className="ls-connected-icon"
+                      title="learning suite has been connected for this class"
+                      aria-label="learning suite has been connected for this class"
+                    >
+                      LS
+                    </span>
+                  ) : null}
+                  {item.lms === "MAX" && item.maxConnected ? (
+                    <span
+                      className="max-connected-icon"
+                      title="max has been connected for this class"
+                      aria-label="max has been connected for this class"
+                    >
+                      MAX
+                    </span>
+                  ) : null}
+                </div>
+                <small className="muted">
+                  Platform: {LMS_PROVIDERS.find((p) => p.id === item.lms)?.label ?? item.lms}
+                </small>
+              </div>
+            ))
+          )}
           <button type="button" onClick={onOpenConnectionManager}>
             Open Connection Manager
           </button>

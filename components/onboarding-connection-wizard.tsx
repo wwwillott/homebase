@@ -35,6 +35,10 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
   const [canvasBaseUrl, setCanvasBaseUrl] = useState("https://byu.instructure.com");
   const [learningSuiteFeeds, setLearningSuiteFeeds] = useState<Record<string, string>>({});
   const [maxFeeds, setMaxFeeds] = useState<Record<string, string>>({});
+  const [learningSuiteConnectedIds, setLearningSuiteConnectedIds] = useState<Set<string>>(
+    () => new Set()
+  );
+  const [maxConnectedIds, setMaxConnectedIds] = useState<Set<string>>(() => new Set());
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -125,6 +129,8 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
         setStatus(`Learning Suite connection failed: ${payload.error ?? "unknown error"}`);
         return;
       }
+      setLearningSuiteConnectedIds(new Set(learningSuiteCourses.map((course) => course.id)));
+      captureClasses();
       setStatus("Learning Suite feeds saved. Classes marked as connected.");
     } finally {
       setBusy(false);
@@ -155,6 +161,8 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
         setStatus(`Max connection failed: ${payload.error ?? "unknown error"}`);
         return;
       }
+      setMaxConnectedIds(new Set(maxCourses.map((course) => course.id)));
+      captureClasses();
       setStatus("Max feeds saved. Classes marked as connected.");
     } finally {
       setBusy(false);
@@ -180,9 +188,9 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
   return (
     <>
       <div className="wizard-overlay" onClick={onClose} aria-hidden="true" />
-      <section className="wizard-modal">
+      <section className="wizard-modal" role="dialog" aria-modal="true" aria-labelledby="wizard-title">
         <div className="settings-header">
-          <h2>Get Started</h2>
+          <h2 id="wizard-title">Get Started</h2>
           {onClose ? (
             <button type="button" onClick={onClose} aria-label="Close setup wizard">
               Close
@@ -316,13 +324,26 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
                 type="text"
                 value={learningSuiteFeeds[course.id] ?? ""}
                 onChange={(event) =>
-                  setLearningSuiteFeeds((current) => ({
-                    ...current,
-                    [course.id]: (event.target as HTMLInputElement).value ?? ""
-                  }))
+                  setLearningSuiteFeeds((current) => {
+                    const nextValue = (event.target as HTMLInputElement).value ?? "";
+                    setLearningSuiteConnectedIds((prev) => {
+                      const next = new Set(prev);
+                      next.delete(course.id);
+                      return next;
+                    });
+                    return {
+                      ...current,
+                      [course.id]: nextValue
+                    };
+                  })
                 }
                 placeholder="Learning Suite iCal feed URL"
               />
+              {learningSuiteConnectedIds.has(course.id) ? (
+                <span className="status-pill ok">Feed added</span>
+              ) : (
+                <span className="status-pill warn">Needs connect</span>
+              )}
             </div>
           ))}
           <p className="muted">
@@ -357,13 +378,26 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
                 type="text"
                 value={maxFeeds[course.id] ?? ""}
                 onChange={(event) =>
-                  setMaxFeeds((current) => ({
-                    ...current,
-                    [course.id]: (event.target as HTMLInputElement).value ?? ""
-                  }))
+                  setMaxFeeds((current) => {
+                    const nextValue = (event.target as HTMLInputElement).value ?? "";
+                    setMaxConnectedIds((prev) => {
+                      const next = new Set(prev);
+                      next.delete(course.id);
+                      return next;
+                    });
+                    return {
+                      ...current,
+                      [course.id]: nextValue
+                    };
+                  })
                 }
                 placeholder="Max connection string / feed URL"
               />
+              {maxConnectedIds.has(course.id) ? (
+                <span className="status-pill ok">Feed added</span>
+              ) : (
+                <span className="status-pill warn">Needs connect</span>
+              )}
             </div>
           ))}
           <div className="row">
@@ -392,7 +426,11 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
         </>
       ) : null}
 
-      {status ? <small>{status}</small> : null}
+      {status ? (
+        <small role="status" aria-live="polite">
+          {status}
+        </small>
+      ) : null}
       </section>
     </>
   );

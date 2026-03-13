@@ -167,16 +167,17 @@ export function ConnectionManagerPanel({
   return (
     <>
       {open ? (
-        <button
-          type="button"
-          className="settings-overlay"
-          onClick={onClose}
-          aria-label="Close connection manager"
-        />
+        <div className="settings-overlay" onClick={onClose} aria-hidden="true" />
       ) : null}
-      <aside className={`settings-sidebar ${open ? "open" : ""}`} aria-hidden={!open}>
+      <aside
+        className={`settings-sidebar ${open ? "open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="connection-manager-title"
+        aria-hidden={!open}
+      >
         <div className="settings-header">
-          <h2>Connection Manager</h2>
+          <h2 id="connection-manager-title">Connection Manager</h2>
           <button type="button" onClick={onClose} aria-label="Close connection manager">
             Close
           </button>
@@ -334,7 +335,11 @@ export function ConnectionManagerPanel({
           <button type="button" onClick={syncNow} disabled={busy}>
             Sync now
           </button>
-          {status ? <small>{status}</small> : null}
+          {status ? (
+            <small role="status" aria-live="polite">
+              {status}
+            </small>
+          ) : null}
         </div>
       </aside>
     </>
