@@ -338,7 +338,7 @@ export function DashboardClient() {
         ) : (
           <ScheduleView mode={view} items={sortedItems} />
         )}
-        <InsightsPanel items={sortedItems} />
+        {view === "calendar" ? null : <InsightsPanel items={sortedItems} />}
       </div>
     </main>
   );

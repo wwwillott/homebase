@@ -75,6 +75,9 @@ export function CalendarView({
             </button>
           </div>
         </div>
+        <button type="button" onClick={() => window.print()}>
+          Print
+        </button>
       </div>
 
       <div className="calendar-title">
