@@ -337,6 +337,12 @@ main {
   gap: 0.5rem;
 }
 
+.calendar-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+
 .calendar-header-row {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));

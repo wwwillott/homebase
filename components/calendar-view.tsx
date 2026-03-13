@@ -75,9 +75,14 @@ export function CalendarView({
             </button>
           </div>
         </div>
-        <button type="button" onClick={() => window.print()}>
-          Print
-        </button>
+      </div>
+
+      <div className="calendar-title">
+        {mode === "month"
+          ? anchor.format("MMMM YYYY")
+          : mode === "week"
+          ? `${rangeStart.format("MMM D")} - ${rangeEnd.format("MMM D")}`
+          : anchor.format("dddd, MMM D")}
       </div>
 
       <div className="calendar-grid">
