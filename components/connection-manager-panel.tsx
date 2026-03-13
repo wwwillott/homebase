@@ -69,10 +69,36 @@ export function ConnectionManagerPanel({
         setStatus(`Canvas connection failed: ${payload.error ?? "unknown error"}`);
         return;
       }
-      setStatus("Canvas connected.");
+      await importCanvasClasses();
+      setStatus("Canvas connected. Classes imported.");
     } finally {
       setBusy(false);
     }
+  }
+
+  async function importCanvasClasses() {
+    const response = await fetch("/api/connectors/canvas/courses");
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      setStatus(`Canvas class import failed: ${payload.error ?? "unknown error"}`);
+      return;
+    }
+    const payload = (await response.json()) as { courses?: Array<{ id: string; name: string }> };
+    if (!payload.courses?.length) {
+      setStatus("Canvas connected, but no courses were returned.");
+      return;
+    }
+
+    const existing = new Map(classes.map((item) => [item.id, item]));
+    const merged = [...classes];
+    for (const course of payload.courses) {
+      const id = `canvas-${course.id}`;
+      if (existing.has(id)) {
+        continue;
+      }
+      merged.push({ id, name: course.name, lms: "CANVAS" });
+    }
+    onClassesChange(merged);
   }
 
   async function connectLearningSuite() {
@@ -325,6 +351,9 @@ export function ConnectionManagerPanel({
             <a href={`/api/connectors/canvas/oauth/start?baseUrl=${encodeURIComponent(canvasBaseUrl)}`}>
               Connect with Canvas OAuth
             </a>
+            <button type="button" onClick={importCanvasClasses} disabled={busy}>
+              Import Canvas Classes
+            </button>
           </div>
         </div>
 

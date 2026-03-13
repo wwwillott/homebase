@@ -250,7 +250,15 @@ export function DashboardClient() {
         <OnboardingConnectionWizard
           open={showSetupWizard}
           onClose={() => setShowSetupWizard(false)}
-          onCaptureClasses={(captured) => setManagedClasses(captured)}
+          onCaptureClasses={(captured) =>
+            setManagedClasses((current) => {
+              const map = new Map(current.map((item) => [item.id, item]));
+              for (const item of captured) {
+                map.set(item.id, item);
+              }
+              return Array.from(map.values());
+            })
+          }
           onDone={async () => {
             await loadAssignments();
             setShowSetupWizard(false);
