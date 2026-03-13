@@ -222,8 +222,8 @@ export function OnboardingConnectionWizard({ open, onClose, onDone, onCaptureCla
                         row.id === course.id
                           ? {
                               ...row,
-                              platform: PLATFORM_SET.has(event.currentTarget.value as LmsProvider)
-                                ? (event.currentTarget.value as LmsProvider)
+                              platform: PLATFORM_SET.has((event.target as HTMLSelectElement).value as LmsProvider)
+                                ? ((event.target as HTMLSelectElement).value as LmsProvider)
                                 : "CANVAS"
                             }
                           : row
