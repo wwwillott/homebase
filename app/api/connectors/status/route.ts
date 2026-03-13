@@ -10,7 +10,7 @@ export async function GET() {
 
   const accounts = await prisma.connectorAccount.findMany({
     where: { userId: session.user.id },
-    select: { provider: true }
+    select: { provider: true, externalUserId: true }
   });
 
   const connectedProviders = Array.from(new Set(accounts.map((account) => account.provider)));

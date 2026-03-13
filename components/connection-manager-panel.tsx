@@ -355,17 +355,6 @@ export function ConnectionManagerPanel({
         </div>
 
         <div style={{ display: "grid", gap: "0.7rem", marginTop: "1rem" }}>
-          <strong>Learning Suite Connection</strong>
-          <p className="muted">
-            if your teacher changes the schedule, it won&apos;t appear here. Update this iCal Feed
-            link periodically.
-          </p>
-          <button type="button" onClick={connectLearningSuite} disabled={busy}>
-            {activeUpdate === "LEARNING_SUITE" ? "Updating feeds..." : "Connect Learning Suite Feeds"}
-          </button>
-        </div>
-
-        <div style={{ display: "grid", gap: "0.7rem", marginTop: "1rem" }}>
           <strong>Max Connection</strong>
           <p className="muted">
             Provide Max connection strings/feed links if required by your class. If the Max schedule
