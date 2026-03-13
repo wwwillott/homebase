@@ -226,7 +226,11 @@ export function ConnectionManagerPanel({
                       onClassesChange(
                         classes.map((row) =>
                           row.id === item.id
-                            ? { ...row, learningSuiteFeedUrl: event.currentTarget.value }
+                            ? {
+                                ...row,
+                                learningSuiteFeedUrl: event.currentTarget.value,
+                                learningSuiteConnected: false
+                              }
                             : row
                         )
                       )
@@ -235,7 +239,7 @@ export function ConnectionManagerPanel({
                   {item.learningSuiteConnected ? (
                     <span className="status-pill ok">Feed added</span>
                   ) : (
-                    <span className="status-pill warn">Not connected</span>
+                    <span className="status-pill warn">Needs connect</span>
                   )}
                 </div>
               ) : null}
@@ -248,7 +252,9 @@ export function ConnectionManagerPanel({
                     onChange={(event) =>
                       onClassesChange(
                         classes.map((row) =>
-                          row.id === item.id ? { ...row, maxFeedUrl: event.currentTarget.value } : row
+                          row.id === item.id
+                            ? { ...row, maxFeedUrl: event.currentTarget.value, maxConnected: false }
+                            : row
                         )
                       )
                     }
@@ -256,7 +262,7 @@ export function ConnectionManagerPanel({
                   {item.maxConnected ? (
                     <span className="status-pill ok">Feed added</span>
                   ) : (
-                    <span className="status-pill warn">Not connected</span>
+                    <span className="status-pill warn">Needs connect</span>
                   )}
                 </div>
               ) : null}
