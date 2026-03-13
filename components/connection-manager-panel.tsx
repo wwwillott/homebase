@@ -7,6 +7,7 @@ export type ManagedClass = {
   id: string;
   name: string;
   lms: LmsProvider;
+  color?: string;
   learningSuiteFeedUrl?: string;
   learningSuiteConnected?: boolean;
   maxFeedUrl?: string;
@@ -28,7 +29,8 @@ function createClass(): ManagedClass {
   return {
     id: `class-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
     name: "",
-    lms: "CANVAS"
+    lms: "CANVAS",
+    color: undefined
   };
 }
 
@@ -248,6 +250,21 @@ export function ConnectionManagerPanel({
                   </option>
                 ))}
               </select>
+              <label className="color-picker">
+                <span className="muted">Color</span>
+                <input
+                  type="color"
+                  value={item.color ?? "#dbeafe"}
+                  onChange={(event) =>
+                    onClassesChange(
+                      classes.map((row) =>
+                        row.id === item.id ? { ...row, color: event.currentTarget.value } : row
+                      )
+                    )
+                  }
+                  aria-label="Class color"
+                />
+              </label>
               {item.lms === "LEARNING_SUITE" ? (
                 <div className="row" style={{ width: "100%" }}>
                   <input

@@ -65,7 +65,14 @@ export function SettingsSidebar({
             classes.map((item) => (
               <div key={item.id} className="connector-row">
                 <div className="row" style={{ justifyContent: "space-between" }}>
-                  <span>{item.name || "Unnamed class"}</span>
+                  <span className="row" style={{ gap: "0.5rem" }}>
+                    <span
+                      className="class-color-dot"
+                      style={{ background: item.color ?? "var(--line)" }}
+                      aria-hidden="true"
+                    />
+                    {item.name || "Unnamed class"}
+                  </span>
                   {item.lms === "LEARNING_SUITE" && item.learningSuiteConnected ? (
                     <span
                       className="ls-connected-icon"

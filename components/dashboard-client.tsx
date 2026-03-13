@@ -190,9 +190,32 @@ export function DashboardClient() {
     localStorage.setItem(CLASS_MANAGER_STORAGE_KEY, JSON.stringify(managedClasses));
   }, [managedClasses]);
 
+  const itemsWithColors = useMemo(() => {
+    const normalizeName = (name: string) => name.trim().toLowerCase();
+    const colorByCourseName = new Map(
+      managedClasses
+        .filter((item) => item.name.trim() && item.color)
+        .map((item) => [normalizeName(item.name), item.color as string])
+    );
+
+    return items.map((item) => {
+      const color = colorByCourseName.get(normalizeName(item.mergedFields.courseName));
+      if (!color || item.mergedFields.courseColor === color) {
+        return item;
+      }
+      return {
+        ...item,
+        mergedFields: {
+          ...item.mergedFields,
+          courseColor: color
+        }
+      };
+    });
+  }, [items, managedClasses]);
+
   const sortedItems = useMemo(
     () =>
-      [...items].sort((a, b) => {
+      [...itemsWithColors].sort((a, b) => {
         const aTs = +new Date(a.mergedFields.dueAt);
         const bTs = +new Date(b.mergedFields.dueAt);
         if (Number.isNaN(aTs) && Number.isNaN(bTs)) return 0;
@@ -200,7 +223,7 @@ export function DashboardClient() {
         if (Number.isNaN(bTs)) return -1;
         return aTs - bTs;
       }),
-    [items]
+    [itemsWithColors]
   );
 
   return (
