@@ -53,7 +53,7 @@ export function CalendarView({
   const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
-    <div className="card">
+    <div className="card calendar-fullbleed">
       <div className="row" style={{ justifyContent: "space-between", marginBottom: "0.8rem" }}>
         <div className="row">
           {(["day", "week", "month"] as const).map((option) => (

@@ -343,6 +343,14 @@ main {
   margin-bottom: 0.6rem;
 }
 
+.calendar-fullbleed {
+  width: 100vw;
+  max-width: none;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  border-radius: 0;
+}
+
 .calendar-header-row {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
