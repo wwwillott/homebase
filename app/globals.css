@@ -135,7 +135,8 @@ main {
 }
 
 main.main-wide {
-  max-width: 100%;
+  max-width: none;
+  width: 100%;
 }
 
 .card {
@@ -339,6 +340,7 @@ main.main-wide {
 .calendar-grid {
   display: grid;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .calendar-title {
@@ -356,7 +358,7 @@ main.main-wide {
 
 .calendar-header-row {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(140px, 1fr));
   gap: 0.6rem;
 }
 
@@ -370,7 +372,7 @@ main.main-wide {
 
 .calendar-week {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(140px, 1fr));
   gap: 0.6rem;
 }
 
@@ -439,6 +441,18 @@ main.main-wide {
 @media (min-width: 900px) {
   .grid {
     grid-template-columns: 2fr 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .calendar-grid {
+    overflow-x: auto;
+  }
+
+  .calendar-header-row,
+  .calendar-week {
+    min-width: 840px;
+    grid-template-columns: repeat(7, minmax(120px, 1fr));
   }
 }
 
