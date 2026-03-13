@@ -3,6 +3,7 @@
 import { signOut } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 import { AssignmentList } from "@/components/assignment-list";
+import { CalendarView } from "@/components/calendar-view";
 import {
   ConnectionManagerPanel,
   ManagedClass
@@ -78,7 +79,7 @@ const THEMES: ThemeOption[] = [
 ];
 
 export function DashboardClient() {
-  const [view, setView] = useState<"daily" | "weekly" | "monthly" | "list">("list");
+  const [view, setView] = useState<"daily" | "weekly" | "monthly" | "list" | "calendar">("list");
   const [items, setItems] = useState<AggregatedAssignment[]>([]);
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);
   const [assignmentTypes, setAssignmentTypes] = useState<string[]>([]);
@@ -86,6 +87,14 @@ export function DashboardClient() {
   const [assignmentType, setAssignmentType] = useState<string>("all");
   const [completion, setCompletion] = useState<"all" | "incomplete" | "complete">("all");
   const [theme, setTheme] = useState<ThemeId>("terminal-study");
+  const [calendarStart, setCalendarStart] = useState(() =>
+    new Date().toISOString().slice(0, 10)
+  );
+  const [calendarEnd, setCalendarEnd] = useState(() => {
+    const end = new Date();
+    end.setDate(end.getDate() + 6);
+    return end.toISOString().slice(0, 10);
+  });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [connectionManagerOpen, setConnectionManagerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -97,6 +106,10 @@ export function DashboardClient() {
     const params = new URLSearchParams({ view, completion });
     if (classId !== "all") params.set("classId", classId);
     if (assignmentType !== "all") params.set("assignmentType", assignmentType);
+    if (view === "calendar") {
+      params.set("start", calendarStart);
+      params.set("end", calendarEnd);
+    }
 
     const response = await fetch(`/api/assignments?${params.toString()}`);
     if (!response.ok) {
@@ -113,7 +126,7 @@ export function DashboardClient() {
 
   useEffect(() => {
     loadAssignments().catch(() => setLoading(false));
-  }, [view, classId, assignmentType, completion]);
+  }, [view, classId, assignmentType, completion, calendarStart, calendarEnd]);
 
   useEffect(() => {
     async function loadConnectorStatus() {
@@ -296,7 +309,17 @@ export function DashboardClient() {
       {loading ? <p>Loading assignments...</p> : null}
 
       <div className="grid">
-        {view === "list" ? (
+        {view === "calendar" ? (
+          <CalendarView
+            items={sortedItems}
+            rangeStart={calendarStart}
+            rangeEnd={calendarEnd}
+            onRangeChange={(nextStart, nextEnd) => {
+              setCalendarStart(nextStart);
+              setCalendarEnd(nextEnd);
+            }}
+          />
+        ) : view === "list" ? (
           <AssignmentList items={sortedItems} onToggled={loadAssignments} />
         ) : (
           <ScheduleView mode={view} items={sortedItems} />

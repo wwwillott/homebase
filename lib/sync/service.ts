@@ -125,7 +125,7 @@ async function evaluateDuplicates(userId: string, assignmentIds: string[]): Prom
 export async function getAssignments(
   userId: string,
   params: {
-    view: "daily" | "weekly" | "monthly" | "list";
+    view: "daily" | "weekly" | "monthly" | "list" | "calendar";
     start?: Date;
     end?: Date;
     classId?: string;

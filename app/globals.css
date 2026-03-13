@@ -332,6 +332,83 @@ main {
   z-index: 50;
 }
 
+.calendar-grid {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.calendar-header {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.calendar-day {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.6rem;
+  min-height: 120px;
+  display: grid;
+  gap: 0.4rem;
+  background: var(--list-item-bg);
+}
+
+.calendar-date {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.calendar-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.calendar-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #0b1220;
+  border: 1px solid var(--line);
+}
+
+@media print {
+  .settings-trigger,
+  .connections-trigger,
+  .wizard-overlay,
+  .wizard-modal,
+  button,
+  select,
+  input[type="text"],
+  input[type="date"],
+  input[type="email"],
+  input[type="password"] {
+    display: none !important;
+  }
+
+  main {
+    max-width: none;
+    padding: 0;
+  }
+
+  .calendar-day {
+    break-inside: avoid;
+  }
+}
+
 @media (min-width: 900px) {
   .grid {
     grid-template-columns: 2fr 1fr;

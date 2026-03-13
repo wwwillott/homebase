@@ -14,7 +14,7 @@ export function dueDateDistanceHours(a: Date, b: Date): number {
 }
 
 export function startAndEndForView(
-  view: "daily" | "weekly" | "monthly" | "list",
+  view: "daily" | "weekly" | "monthly" | "list" | "calendar",
   baseDate = dayjs()
 ): { start: Date; end: Date } {
   if (view === "daily") {
@@ -25,6 +25,9 @@ export function startAndEndForView(
   }
   if (view === "monthly") {
     return { start: baseDate.startOf("month").toDate(), end: baseDate.endOf("month").toDate() };
+  }
+  if (view === "calendar") {
+    return { start: baseDate.startOf("week").toDate(), end: baseDate.endOf("week").toDate() };
   }
   return { start: new Date(0), end: new Date("2999-12-31T00:00:00.000Z") };
 }

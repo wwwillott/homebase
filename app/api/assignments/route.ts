@@ -11,7 +11,9 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
   const viewParam = searchParams.get("view") ?? "list";
-  const view = ["daily", "weekly", "monthly", "list"].includes(viewParam) ? viewParam : "list";
+  const view = ["daily", "weekly", "monthly", "list", "calendar"].includes(viewParam)
+    ? viewParam
+    : "list";
 
   const start = searchParams.get("start");
   const end = searchParams.get("end");
@@ -33,7 +35,7 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status") as "OPEN" | "COMPLETED" | "OVERDUE" | null;
 
   const assignments = await getAssignments(session.user.id, {
-    view: view as "daily" | "weekly" | "monthly" | "list",
+    view: view as "daily" | "weekly" | "monthly" | "list" | "calendar",
     start: start ? new Date(start) : undefined,
     end: end ? new Date(end) : undefined,
     classId,

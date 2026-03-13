@@ -1,12 +1,12 @@
 "use client";
 
 interface Props {
-  value: "daily" | "weekly" | "monthly" | "list";
-  onChange: (view: "daily" | "weekly" | "monthly" | "list") => void;
+  value: "daily" | "weekly" | "monthly" | "list" | "calendar";
+  onChange: (view: "daily" | "weekly" | "monthly" | "list" | "calendar") => void;
 }
 
 export function ViewModeSwitch({ value, onChange }: Props) {
-  const options = ["daily", "weekly", "monthly", "list"] as const;
+  const options = ["daily", "weekly", "monthly", "list", "calendar"] as const;
 
   return (
     <div className="row">
